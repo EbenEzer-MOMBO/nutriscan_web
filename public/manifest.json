@@ -1,0 +1,42 @@
+{
+  "name": "Nutriscan - Suivez vos calories avec l'IA",
+  "short_name": "Nutriscan",
+  "description": "Scannez vos repas et suivez vos calories instantanément grâce à l'intelligence artificielle",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ED1C24",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo_nutriscan.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo_nutriscan.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "lifestyle", "food"],
+  "screenshots": [
+    {
+      "src": "/slide1.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/slide2.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/slide3.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg"
+    }
+  ]
+}

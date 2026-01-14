@@ -12,11 +12,19 @@ export default function InstallPWA() {
   useEffect(() => {
     // Vérifier si l'app est déjà installée
     if (window.matchMedia("(display-mode: standalone)").matches) {
+      console.log("App déjà installée (standalone mode)");
       setIsInstalled(true);
       return;
     }
 
+    // Vérifier si c'est iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      console.log("iOS détecté - beforeinstallprompt non supporté");
+    }
+
     const handler = (e: Event) => {
+      console.log("beforeinstallprompt événement déclenché");
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallButton(true);
@@ -26,10 +34,21 @@ export default function InstallPWA() {
 
     // Détecter si l'app a été installée
     window.addEventListener("appinstalled", () => {
+      console.log("App installée avec succès");
       setIsInstalled(true);
       setShowInstallButton(false);
       setDeferredPrompt(null);
     });
+
+    // Debug: vérifier après un court délai
+    setTimeout(() => {
+      console.log("État PWA:", {
+        isInstalled,
+        showInstallButton,
+        hasDeferredPrompt: !!deferredPrompt,
+        isStandalone: window.matchMedia("(display-mode: standalone)").matches,
+      });
+    }, 2000);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
