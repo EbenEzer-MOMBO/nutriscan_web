@@ -139,6 +139,7 @@ export default function InstallPWA() {
 
   // Afficher différemment selon la page
   const isOnboardingPage = pathname === "/";
+  const isLoginPage = pathname === "/login";
 
   if (isOnboardingPage) {
     // Sur la page d'onboarding, afficher comme bouton secondaire intégré
@@ -163,6 +164,34 @@ export default function InstallPWA() {
             />
           </svg>
           Installer l'application
+        </button>
+      </div>
+    );
+  }
+
+  if (isLoginPage) {
+    // Sur la page de login, afficher comme bouton principal très visible
+    return (
+      <div className="fixed bottom-6 left-6 right-6 z-50 max-w-sm mx-auto">
+        <button
+          onClick={handleInstallClick}
+          className="w-full py-5 rounded-2xl bg-gradient-to-r from-[#ED1C24] to-[#F7941D] text-white font-bold text-lg shadow-2xl shadow-[#662D91]/40 hover:shadow-[#662D91]/50 transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center justify-center gap-3 animate-pulse-slow"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2.5}
+            stroke="currentColor"
+            className="w-6 h-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+            />
+          </svg>
+          Télécharger l'application
         </button>
       </div>
     );
