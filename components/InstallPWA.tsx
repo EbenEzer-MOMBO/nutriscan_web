@@ -8,19 +8,28 @@ export default function InstallPWA() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
 
   useEffect(() => {
     // Vérifier si l'app est déjà installée
-    if (window.matchMedia("(display-mode: standalone)").matches) {
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+    const isIOSStandalone = (window.navigator as any).standalone === true;
+    
+    if (isStandalone || isIOSStandalone) {
       console.log("App déjà installée (standalone mode)");
       setIsInstalled(true);
       return;
     }
 
     // Vérifier si c'est iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isIOS) {
-      console.log("iOS détecté - beforeinstallprompt non supporté");
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    setIsIOS(iOS);
+    
+    if (iOS) {
+      console.log("iOS détecté - affichage du bouton avec instructions");
+      // Sur iOS, afficher le bouton car beforeinstallprompt n'existe pas
+      setShowInstallButton(true);
     }
 
     const handler = (e: Event) => {
@@ -46,7 +55,10 @@ export default function InstallPWA() {
         isInstalled,
         showInstallButton,
         hasDeferredPrompt: !!deferredPrompt,
-        isStandalone: window.matchMedia("(display-mode: standalone)").matches,
+        isStandalone,
+        isIOSStandalone,
+        iOS,
+        userAgent: navigator.userAgent,
       });
     }, 2000);
 
@@ -56,7 +68,14 @@ export default function InstallPWA() {
   }, []);
 
   const handleInstallClick = async () => {
+    // Sur iOS, afficher les instructions
+    if (isIOS) {
+      setShowIOSInstructions(true);
+      return;
+    }
+
     if (!deferredPrompt) {
+      console.log("Pas de prompt disponible");
       return;
     }
 
@@ -69,9 +88,53 @@ export default function InstallPWA() {
     }
   };
 
-  // Ne pas afficher si déjà installé ou si le prompt n'est pas disponible
-  if (isInstalled || !showInstallButton) {
+  // Ne pas afficher si déjà installé
+  if (isInstalled) {
     return null;
+  }
+
+  // Ne pas afficher si pas de bouton à montrer
+  if (!showInstallButton) {
+    return null;
+  }
+
+  // Modal d'instructions iOS
+  if (showIOSInstructions) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-black/50 flex items-end sm:items-center justify-center p-4">
+        <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl animate-fadeIn">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">
+            Installer Nutriscan sur iOS
+          </h3>
+          <div className="space-y-3 text-gray-700 mb-6">
+            <div className="flex items-start gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] text-white text-sm flex items-center justify-center font-bold">
+                1
+              </span>
+              <p>Appuyez sur le bouton <strong>Partager</strong> en bas de Safari</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] text-white text-sm flex items-center justify-center font-bold">
+                2
+              </span>
+              <p>Sélectionnez <strong>"Sur l'écran d'accueil"</strong></p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] text-white text-sm flex items-center justify-center font-bold">
+                3
+              </span>
+              <p>Appuyez sur <strong>Ajouter</strong></p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowIOSInstructions(false)}
+            className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#ED1C24] to-[#F7941D] text-white font-bold shadow-lg hover:shadow-xl transition-all"
+          >
+            Compris
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // Afficher différemment selon la page
