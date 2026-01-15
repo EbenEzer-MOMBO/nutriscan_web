@@ -31,7 +31,7 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#ED1C24",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
@@ -44,7 +44,7 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/logo_nutriscan.png" />
-        <link rel="apple-touch-icon" href="/logo_nutriscan.png" />
+        <link rel="apple-touch-icon" href="/icon_nutriscan.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Nutriscan" />

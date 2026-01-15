@@ -3,11 +3,21 @@
 import Image from "next/image";
 import { GoogleLogo, AppleLogo } from "phosphor-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [isInstalled, setIsInstalled] = useState(false);
+  const DEBUG = true; // Mettre à false en production
 
   useEffect(() => {
+    // En mode debug, considérer l'app comme installée
+    if (DEBUG) {
+      setIsInstalled(true);
+      console.log("Mode DEBUG activé - Boutons de connexion affichés");
+      return;
+    }
+
     // Vérifier si l'app est installée
     const checkInstalled = () => {
       const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
@@ -26,11 +36,15 @@ export default function LoginPage() {
   const handleGoogleLogin = () => {
     // TODO: Implémenter la connexion Google
     console.log("Connexion avec Google");
+    // Rediriger vers le dashboard
+    router.push("/dashboard");
   };
 
   const handleAppleLogin = () => {
     // TODO: Implémenter la connexion Apple
     console.log("Connexion avec Apple");
+    // Rediriger vers le dashboard
+    router.push("/dashboard");
   };
 
   return (
