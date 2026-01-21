@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 interface MacroCardProps {
   name: string;
   amount: number;
@@ -9,7 +11,17 @@ interface MacroCardProps {
 }
 
 export default function MacroCard({ name, amount, unit, goal, color }: MacroCardProps) {
+  const [animatedWidth, setAnimatedWidth] = useState(0);
   const percentage = (amount / goal) * 100;
+
+  useEffect(() => {
+    // Animation de remplissage initial avec délai différent pour chaque carte
+    const timer = setTimeout(() => {
+      setAnimatedWidth(percentage);
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [percentage]);
 
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm">
@@ -24,9 +36,9 @@ export default function MacroCard({ name, amount, unit, goal, color }: MacroCard
       {/* Progress bar with neon effect */}
       <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
         <div
-          className="h-full rounded-full transition-all duration-500 relative"
+          className="h-full rounded-full transition-all duration-1000 ease-out relative"
           style={{
-            width: `${Math.min(percentage, 100)}%`,
+            width: `${Math.min(animatedWidth, 100)}%`,
             backgroundColor: color,
             boxShadow: `0 0 8px ${color}, 0 0 12px ${color}80`,
           }}

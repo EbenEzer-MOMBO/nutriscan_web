@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Header from "@/components/dashboard/Header";
 import WeekCalendar from "@/components/dashboard/WeekCalendar";
 import CalorieProgress from "@/components/dashboard/CalorieProgress";
@@ -9,6 +10,25 @@ import BottomNav from "@/components/dashboard/BottomNav";
 import { Camera, Barcode } from "phosphor-react";
 
 export default function DashboardPage() {
+  useEffect(() => {
+    // Empêcher le geste de retour natif sur mobile
+    const preventSwipeBack = (e: TouchEvent) => {
+      if (e.touches.length > 1) return;
+      
+      const touch = e.touches[0];
+      const isLeftEdge = touch.clientX < 20;
+      
+      if (isLeftEdge) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchstart', preventSwipeBack, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchstart', preventSwipeBack);
+    };
+  }, []);
   // Données exemple - à remplacer par des vraies données
   const userData = {
     name: "Utilisateur",
@@ -36,7 +56,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <Header userName={userData.name} userAvatar={userData.avatar} />
+      <Header />
       
       <main className="px-6 py-6 space-y-6">
         {/* Calendrier de la semaine */}

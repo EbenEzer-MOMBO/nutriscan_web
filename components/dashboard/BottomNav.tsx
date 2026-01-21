@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { House, BookOpen, Plus, TrendUp, Gear } from "phosphor-react";
+import { House, BookOpen, Plus, TrendUp, User } from "phosphor-react";
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -38,10 +38,10 @@ export default function BottomNav() {
       ),
     },
     {
-      name: "Réglages",
+      name: "Profil",
       path: "/settings",
       icon: (active: boolean) => (
-        <Gear size={24} weight={active ? "fill" : "regular"} />
+        <User size={24} weight={active ? "fill" : "regular"} />
       ),
     },
   ];
@@ -57,9 +57,9 @@ export default function BottomNav() {
               <Link
                 key={item.name}
                 href={item.path}
-                className="flex flex-col items-center relative -top-6"
+                className="flex flex-col items-center relative -top-6 group"
               >
-                <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] flex items-center justify-center shadow-lg shadow-[#662D91]/30 text-white">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] flex items-center justify-center shadow-lg shadow-[#662D91]/30 text-white transition-all duration-200 group-active:scale-90 group-active:shadow-xl group-active:shadow-[#662D91]/40">
                   {item.icon(false)}
                 </div>
               </Link>
@@ -70,12 +70,12 @@ export default function BottomNav() {
             <Link
               key={item.name}
               href={item.path}
-              className="flex flex-col items-center gap-1 min-w-[60px]"
+              className="flex flex-col items-center gap-1 min-w-[60px] group"
             >
-              <div className={isActive ? "text-[#ED1C24]" : "text-gray-400"}>
+              <div className={`transition-all duration-200 group-active:scale-75 ${isActive ? "text-[#ED1C24]" : "text-gray-400"}`}>
                 {item.icon(isActive)}
               </div>
-              <span className={`text-xs font-medium ${isActive ? "text-[#ED1C24]" : "text-gray-500"}`}>
+              <span className={`text-xs font-medium transition-all duration-200 group-active:scale-90 ${isActive ? "text-[#ED1C24]" : "text-gray-500"}`}>
                 {item.name}
               </span>
             </Link>

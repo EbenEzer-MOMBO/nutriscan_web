@@ -1,13 +1,25 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 interface CalorieProgressProps {
   current: number;
   goal: number;
 }
 
 export default function CalorieProgress({ current, goal }: CalorieProgressProps) {
+  const [animatedPercentage, setAnimatedPercentage] = useState(0);
   const percentage = Math.min((current / goal) * 100, 100);
   const remaining = Math.max(goal - current, 0);
+
+  useEffect(() => {
+    // Animation de remplissage initial
+    const timer = setTimeout(() => {
+      setAnimatedPercentage(percentage);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [percentage]);
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm flex flex-col items-center">
@@ -53,9 +65,9 @@ export default function CalorieProgress({ current, goal }: CalorieProgressProps)
             strokeWidth="16"
             fill="none"
             strokeDasharray={`${2 * Math.PI * 88}`}
-            strokeDashoffset={`${2 * Math.PI * 88 * (1 - percentage / 100)}`}
+            strokeDashoffset={`${2 * Math.PI * 88 * (1 - animatedPercentage / 100)}`}
             strokeLinecap="round"
-            className="transition-all duration-500"
+            className="transition-all duration-1000 ease-out"
             filter="url(#neon-glow)"
           />
         </svg>

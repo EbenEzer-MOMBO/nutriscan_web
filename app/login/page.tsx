@@ -4,10 +4,19 @@ import Image from "next/image";
 import { GoogleLogo, AppleLogo } from "phosphor-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
+import AppleSignin from "react-apple-signin-auth";
+import { loginWithGoogle, loginWithApple } from "@/lib/auth.service";
 
-export default function LoginPage() {
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+const APPLE_CLIENT_ID = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "";
+const APPLE_REDIRECT_URI = process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI || "";
+
+function LoginContent() {
   const router = useRouter();
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const DEBUG = true; // Mettre à false en production
 
   useEffect(() => {
@@ -33,18 +42,102 @@ export default function LoginPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Configuration Google Login
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        console.log("Token Google reçu:", tokenResponse.access_token);
+        
+        // Appeler l'API backend avec le token Google
+        const response = await loginWithGoogle(tokenResponse.access_token);
+        
+        if (response.success && response.data) {
+          console.log("Connexion réussie:", response.data.user);
+          // Rediriger vers le dashboard
+          router.push("/dashboard");
+        } else {
+          setError(response.error || "Erreur lors de la connexion");
+          console.error("Erreur connexion:", response.error);
+        }
+      } catch (err) {
+        setError("Une erreur est survenue lors de la connexion");
+        console.error("Erreur:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: (error) => {
+      console.error("Erreur Google OAuth:", error);
+      setError("Erreur lors de la connexion avec Google");
+      setIsLoading(false);
+    },
+    scope: "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
+  });
+
   const handleGoogleLogin = () => {
-    // TODO: Implémenter la connexion Google
-    console.log("Connexion avec Google");
-    // Rediriger vers le dashboard
-    router.push("/dashboard");
+    if (isLoading) return;
+    googleLogin();
   };
 
-  const handleAppleLogin = () => {
-    // TODO: Implémenter la connexion Apple
-    console.log("Connexion avec Apple");
-    // Rediriger vers le dashboard
-    router.push("/dashboard");
+  const handleAppleResponse = async (response: any) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      console.log("Réponse Apple reçue:", response);
+      
+      if (!response.authorization) {
+        throw new Error("Aucun token d'autorisation reçu d'Apple");
+      }
+
+      // Préparer les informations utilisateur si disponibles (première connexion)
+      let userData = undefined;
+      if (response.user) {
+        userData = {
+          name: {
+            firstName: response.user.name?.firstName || response.user.givenName || "",
+            lastName: response.user.name?.lastName || response.user.familyName || "",
+          },
+          email: response.user.email || "",
+        };
+        console.log("Première connexion Apple - Données utilisateur:", userData);
+      }
+
+      // Appeler l'API backend avec le token Apple et les données utilisateur
+      const authResponse = await loginWithApple(
+        response.authorization.id_token,
+        userData
+      );
+      
+      if (authResponse.success && authResponse.data) {
+        console.log("Connexion Apple réussie:", authResponse.data.user);
+        // Rediriger vers le dashboard
+        router.push("/dashboard");
+      } else {
+        setError(authResponse.error || "Erreur lors de la connexion avec Apple");
+        console.error("Erreur connexion Apple:", authResponse.error);
+      }
+    } catch (err) {
+      setError("Une erreur est survenue lors de la connexion avec Apple");
+      console.error("Erreur Apple:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAppleError = (error: any) => {
+    console.error("Erreur Apple Sign In:", error);
+    
+    // Si l'utilisateur annule, ne pas afficher d'erreur
+    if (error?.error === "popup_closed_by_user") {
+      return;
+    }
+    
+    setError("Erreur lors de la connexion avec Apple");
+    setIsLoading(false);
   };
 
   return (
@@ -82,6 +175,13 @@ export default function LoginPage() {
             Suivez vos calories avec l'IA
           </p>
         </div>
+
+        {/* Error message */}
+        {error && (
+          <div className="w-full max-w-sm mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-2xl">
+            <p className="text-red-600 text-sm text-center font-semibold">{error}</p>
+          </div>
+        )}
 
         {/* Login buttons container */}
         <div className="w-full max-w-sm space-y-6">
@@ -127,24 +227,58 @@ export default function LoginPage() {
               {/* Google login button */}
               <button
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-white border-2 border-gray-200 shadow-lg hover:shadow-xl hover:border-gray-300 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                disabled={isLoading}
+                className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-white border-2 border-gray-200 shadow-lg hover:shadow-xl hover:border-gray-300 transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <GoogleLogo size={24} weight="bold" className="text-[#4285F4]" />
                 <span className="font-semibold text-gray-800">
-                  Continuer avec Google
+                  {isLoading ? "Connexion..." : "Continuer avec Google"}
                 </span>
               </button>
 
               {/* Apple login button */}
-              <button
-                onClick={handleAppleLogin}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-black border-2 border-black shadow-lg hover:shadow-xl hover:bg-gray-900 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <AppleLogo size={24} weight="fill" className="text-white" />
-                <span className="font-semibold text-white">
-                  Continuer avec Apple
-                </span>
-              </button>
+              {APPLE_CLIENT_ID ? (
+                <AppleSignin
+                  authOptions={{
+                    clientId: APPLE_CLIENT_ID,
+                    scope: "email name",
+                    redirectURI: APPLE_REDIRECT_URI,
+                    state: "state",
+                    nonce: "nonce",
+                    usePopup: true,
+                  }}
+                  uiType="dark"
+                  onSuccess={handleAppleResponse}
+                  onError={handleAppleError}
+                  skipScript={false}
+                  render={(props: any) => (
+                    <button
+                      {...props}
+                      disabled={isLoading}
+                      className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-black border-2 border-black shadow-lg hover:shadow-xl hover:bg-gray-900 transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                        isLoading ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      <AppleLogo size={24} weight="fill" className="text-white" />
+                      <span className="font-semibold text-white">
+                        {isLoading ? "Connexion..." : "Continuer avec Apple"}
+                      </span>
+                    </button>
+                  )}
+                />
+              ) : (
+                <button
+                  disabled
+                  className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-gray-300 border-2 border-gray-300 cursor-not-allowed"
+                >
+                  <AppleLogo size={24} weight="fill" className="text-gray-500" />
+                  <span className="font-semibold text-gray-500">
+                    Apple Sign In non configuré
+                  </span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -162,5 +296,18 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  // Vérifier si le client ID est configuré
+  if (!GOOGLE_CLIENT_ID) {
+    console.warn("NEXT_PUBLIC_GOOGLE_CLIENT_ID n'est pas configuré");
+  }
+
+  return (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <LoginContent />
+    </GoogleOAuthProvider>
   );
 }

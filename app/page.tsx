@@ -1,12 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { isAuthenticated } from "@/lib/auth.service";
 
 export default function Home() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    // Vérifier si l'utilisateur est déjà connecté
+    const checkAuth = () => {
+      if (isAuthenticated()) {
+        // Rediriger vers le dashboard si connecté
+        router.push("/dashboard");
+      } else {
+        setIsChecking(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   const steps = [
     {
@@ -43,6 +59,18 @@ export default function Home() {
     // Rediriger vers la page de connexion
     router.push("/login");
   };
+
+  // Afficher un écran de chargement pendant la vérification
+  if (isChecking) {
+    return (
+      <div className="h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#ED1C24] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-semibold">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen bg-white overflow-hidden flex flex-col">

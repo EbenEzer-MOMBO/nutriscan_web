@@ -1,9 +1,30 @@
 "use client";
 
+import { useEffect } from "react";
 import Header from "@/components/dashboard/Header";
 import BottomNav from "@/components/dashboard/BottomNav";
 
 export default function AddPage() {
+  useEffect(() => {
+    // Empêcher le geste de retour natif sur mobile
+    const preventSwipeBack = (e: TouchEvent) => {
+      if (e.touches.length > 1) return;
+      
+      const touch = e.touches[0];
+      const isLeftEdge = touch.clientX < 20;
+      
+      if (isLeftEdge) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchstart', preventSwipeBack, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchstart', preventSwipeBack);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <Header />
