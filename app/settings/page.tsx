@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import BottomNav from "@/components/dashboard/BottomNav";
 import { Bell, Lock, Question, CheckCircle, CaretRight, Fire, SignOut } from "phosphor-react";
 import Image from "next/image";
+import { getProfilePhotoUrl, getInitials } from "@/lib/image.utils";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -31,22 +32,15 @@ export default function SettingsPage() {
     };
   }, []);
 
-  // Récupérer les initiales du nom
-  const getInitials = (name: string) => {
-    if (!name) return "NU";
-    const parts = name.split(" ");
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
-
   // Formater la date d'inscription
   const getRegistrationDate = () => {
     // Pour l'instant, utiliser une date fictive
     // TODO: Ajouter created_at dans les données utilisateur du backend
     return "Janvier 2024";
   };
+
+  // Obtenir l'URL de la photo corrigée
+  const photoUrl = user ? getProfilePhotoUrl(user) : null;
 
   if (loading) {
     return (
@@ -65,11 +59,11 @@ export default function SettingsPage() {
         {/* Profile header */}
         <div className="flex flex-col items-center pt-4">
           <div className="relative mb-4">
-            {user?.profile_photo_url ? (
+            {photoUrl ? (
               <div className="w-24 h-24 rounded-full overflow-hidden shadow-lg">
                 <Image
-                  src={user.profile_photo_url}
-                  alt={user.name || "Profile"}
+                  src={photoUrl}
+                  alt={user?.name || "Profile"}
                   width={96}
                   height={96}
                   className="object-cover"
@@ -77,7 +71,7 @@ export default function SettingsPage() {
               </div>
             ) : (
               <div className="w-24 h-24 rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                {user ? getInitials(user.name) : "NU"}
+                {user ? getInitials(user.name || "NU") : "NU"}
               </div>
             )}
             <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-[#17a2b8] border-4 border-white flex items-center justify-center">

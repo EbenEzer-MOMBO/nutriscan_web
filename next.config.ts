@@ -8,6 +8,25 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
+      // AWS S3/CloudFlare R2 - Production (accès direct)
+      {
+        protocol: 'https',
+        hostname: '367be3a203552894324007d0096e0cd.r2.cloudflarestorage.com',
+        pathname: '/**',
+      },
+      // Laravel Cloud - Production (via API)
+      {
+        protocol: 'https',
+        hostname: 'nutriscan-main-yyhc0n.laravel.cloud',
+        pathname: '/**',
+      },
+      // Laravel Cloud - Ancien domaine (fallback)
+      {
+        protocol: 'https',
+        hostname: 'f1s-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud',
+        pathname: '/**',
+      },
+      // Localhost - Développement
       {
         protocol: 'http',
         hostname: 'localhost',
@@ -20,6 +39,7 @@ const nextConfig: NextConfig = {
         port: '8000',
         pathname: '/storage/**',
       },
+      // Google OAuth
       {
         protocol: 'https',
         hostname: '*.googleusercontent.com',
@@ -30,12 +50,6 @@ const nextConfig: NextConfig = {
         hostname: '*.google.com',
         pathname: '**',
       },
-      // Ajouter votre domaine de production ici
-      // {
-      //   protocol: 'https',
-      //   hostname: 'api.votre-domaine.com',
-      //   pathname: '/storage/**',
-      // },
     ],
     // Désactiver l'optimisation des images en développement pour éviter les problèmes CORS
     unoptimized: process.env.NODE_ENV === 'development',
