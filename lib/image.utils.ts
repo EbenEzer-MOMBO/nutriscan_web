@@ -3,56 +3,25 @@
  */
 
 /**
- * Corrige les URLs d'images incorrectes du backend
+ * Corrige les URLs d'images incorrectes du backend (si nécessaire)
  * @param url - URL de l'image à corriger
- * @returns URL corrigée
+ * @returns URL corrigée ou originale
  */
 export function fixImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
 
-  // Si l'URL contient déjà /storage/ ou /api/storage/, la retourner telle quelle
-  if (url.includes('/storage/')) {
-    return url;
-  }
-
-  // Vérifier si c'est une URL Google (OAuth)
-  if (url.includes('googleusercontent.com') || url.includes('google.com')) {
-    return url;
-  }
-
-  // Vérifier si c'est une URL ui-avatars.com
-  if (url.includes('ui-avatars.com')) {
-    return url;
-  }
-
-  // Corriger les URLs Laravel Cloud sans /storage/
-  // Format attendu: https://nutriscan-main-yyhc0n.laravel.cloud/api/storage/profile-photos/xxx.jpg
-  const laravelCloudPattern = /^https?:\/\/([^\/]+\.laravel\.cloud)\/(profile-photos\/.+)$/;
-  const match = url.match(laravelCloudPattern);
+  // Le backend envoie maintenant les URLs correctes directement
+  // Format production: https://fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud/profile-photos/xxx.jpg
+  // Format local: http://localhost:8000/storage/profile-photos/xxx.jpg
   
-  if (match) {
-    const [, domain, path] = match;
-    // Ajouter /api/storage/ avant le chemin
-    return `https://${domain}/api/storage/${path}`;
-  }
-
-  // Corriger les URLs localhost sans /storage/
-  const localhostPattern = /^https?:\/\/(localhost|127\.0\.0\.1):(\d+)\/(profile-photos\/.+)$/;
-  const localhostMatch = url.match(localhostPattern);
-  
-  if (localhostMatch) {
-    const [, host, port, path] = localhostMatch;
-    return `http://${host}:${port}/storage/${path}`;
-  }
-
-  // Si aucun pattern ne correspond, retourner l'URL originale
+  // Retourner l'URL telle quelle - plus besoin de correction
   return url;
 }
 
 /**
- * Obtient l'URL de la photo de profil ou génère un avatar avec les initiales
+ * Obtient l'URL de la photo de profil
  * @param user - Objet utilisateur
- * @returns URL de la photo de profil corrigée ou null
+ * @returns URL de la photo de profil ou null
  */
 export function getProfilePhotoUrl(user: {
   profile_photo_url?: string | null;

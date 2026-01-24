@@ -14,16 +14,16 @@ const nextConfig: NextConfig = {
         hostname: '367be3a203552894324007d0096e0cd.r2.cloudflarestorage.com',
         pathname: '/**',
       },
-      // Laravel Cloud - Production (via API)
+      // Laravel Cloud - Production (domaine principal)
       {
         protocol: 'https',
-        hostname: 'nutriscan-main-yyhc0n.laravel.cloud',
+        hostname: 'fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud',
         pathname: '/**',
       },
       // Laravel Cloud - Ancien domaine (fallback)
       {
         protocol: 'https',
-        hostname: 'f1s-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud',
+        hostname: 'nutriscan-main-yyhc0n.laravel.cloud',
         pathname: '/**',
       },
       // Localhost - Développement

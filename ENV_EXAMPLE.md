@@ -6,7 +6,7 @@ Créez un fichier `.env.local` à la racine du projet avec les variables suivant
 # Configuration API Backend
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
 # En production:
-# NEXT_PUBLIC_API_URL=https://nutriscan-main-yyhc0n.laravel.cloud/api
+# NEXT_PUBLIC_API_URL=https://fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud/api
 
 # Google OAuth Configuration
 # Obtenir depuis: https://console.cloud.google.com/
@@ -19,11 +19,11 @@ NEXT_PUBLIC_APPLE_REDIRECT_URI=https://your-domain.com/login
 
 # AWS S3 Configuration (Référence - géré par le backend)
 # Les images sont accessibles via:
-# https://nutriscan-main-yyhc0n.laravel.cloud/api/storage/profile-photos/xxx.jpg
+# https://fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud/profile-photos/xxx.jpg
 AWS_BUCKET=f1s-a0e47b48-31ff-4bd2-a880-530e181a3129
 AWS_DEFAULT_REGION=auto
 AWS_ENDPOINT=https://367be3a203552894324007d0096e0cd.r2.cloudflarestorage.com
-AWS_URL=https://nutriscan-main-yyhc0n.laravel.cloud
+AWS_URL=https://fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud
 ```
 
 ## Configuration Google OAuth

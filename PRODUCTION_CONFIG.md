@@ -4,31 +4,38 @@
 
 ### Backend API
 ```
-https://nutriscan-main-yyhc0n.laravel.cloud/api
+https://fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud/api
 ```
 
 ### Photos de Profil
 ```
-https://nutriscan-main-yyhc0n.laravel.cloud/api/storage/profile-photos/[filename].jpg
+https://fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud/profile-photos/[filename].jpg
 ```
 
 **Exemple d'URL complète:**
 ```
-https://nutriscan-main-yyhc0n.laravel.cloud/api/storage/profile-photos/GLcyA148umsAvnvYN0use9akpxfrpPJY894anvTK.jpg
+https://fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud/profile-photos/GLcyA148umsAvnvYN0use9akpxfrpPJY894anvTK.jpg
+```
+
+**Structure simplifiée:**
+```
+https://fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud/profile-photos/xxx.jpg
+       └─────────────────────┬───────────────────────────┘ └─────┬──────┘
+                      domaine Laravel Cloud               dossier images
 ```
 
 ## ✅ Modifications Apportées
 
 ### 1. Next.js Configuration (`next.config.ts`)
 
-Ajout du domaine de production `nutriscan-main-yyhc0n.laravel.cloud` :
+Ajout du domaine de production `fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud` :
 
 ```typescript
 images: {
   remotePatterns: [
     {
       protocol: 'https',
-      hostname: 'nutriscan-main-yyhc0n.laravel.cloud',
+      hostname: 'fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud',
       pathname: '/**',
     },
     // ... autres domaines
@@ -36,27 +43,16 @@ images: {
 }
 ```
 
-### 2. Utilitaire de Correction (`lib/image.utils.ts`)
+### 2. Utilitaire de Gestion (`lib/image.utils.ts`)
 
-Fonction `fixImageUrl()` mise à jour pour gérer la structure `/api/storage/` :
+L'utilitaire a été simplifié car le backend envoie maintenant les URLs correctes :
 
 ```typescript
-// Avant (incorrect)
-"https://nutriscan-main-yyhc0n.laravel.cloud/profile-photos/abc.jpg"
+// Le backend envoie directement l'URL correcte
+"https://fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud/profile-photos/abc.jpg"
 
-// Après correction automatique
-"https://nutriscan-main-yyhc0n.laravel.cloud/api/storage/profile-photos/abc.jpg"
+// Plus besoin de correction !
 ```
-
-**Pattern regex utilisé:**
-```typescript
-/^https?:\/\/([^\/]+\.laravel\.cloud)\/(profile-photos\/.+)$/
-```
-
-**Transformation:**
-- Capture le domaine: `nutriscan-main-yyhc0n.laravel.cloud`
-- Capture le chemin: `profile-photos/xxx.jpg`
-- Reconstruit: `https://${domaine}/api/storage/${chemin}`
 
 ### 3. Variables d'Environnement (`ENV_EXAMPLE.md`)
 
@@ -143,7 +139,7 @@ AWS_USE_PATH_STYLE_ENDPOINT=false
 
 **Variables d'environnement (.env.local):**
 ```env
-NEXT_PUBLIC_API_URL=https://nutriscan-main-yyhc0n.laravel.cloud/api
+NEXT_PUBLIC_API_URL=https://fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud/api
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
 NEXT_PUBLIC_APPLE_CLIENT_ID=your-apple-client-id
 NEXT_PUBLIC_APPLE_REDIRECT_URI=https://your-domain.com/login
@@ -153,7 +149,7 @@ NEXT_PUBLIC_APPLE_REDIRECT_URI=https://your-domain.com/login
 
 ### Test 1: Vérifier l'URL de l'image
 ```bash
-curl -I https://nutriscan-main-yyhc0n.laravel.cloud/api/storage/profile-photos/GLcyA148umsAvnvYN0use9akpxfrpPJY894anvTK.jpg
+curl -I https://fls-a0e47b48-31ff-4bd2-a880-530e181a3129.laravel.cloud/profile-photos/GLcyA148umsAvnvYN0use9akpxfrpPJY894anvTK.jpg
 ```
 
 **Résultat attendu:** `200 OK` avec content-type `image/jpeg` ou `image/png`
