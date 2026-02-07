@@ -14,10 +14,10 @@ export default function DashboardPage() {
     // Empêcher le geste de retour natif sur mobile
     const preventSwipeBack = (e: TouchEvent) => {
       if (e.touches.length > 1) return;
-      
+
       const touch = e.touches[0];
       const isLeftEdge = touch.clientX < 20;
-      
+
       if (isLeftEdge) {
         e.preventDefault();
       }
@@ -57,17 +57,17 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <Header />
-      
+
       <main className="px-6 py-6 space-y-6">
         {/* Calendrier de la semaine */}
         <WeekCalendar />
-        
+
         {/* Progression des calories */}
         <CalorieProgress
           current={userData.calories.current}
           goal={userData.calories.goal}
         />
-        
+
         {/* Macros quotidiennes */}
         <div>
           <h2 className="text-sm font-semibold text-gray-500 uppercase mb-4">
@@ -97,25 +97,25 @@ export default function DashboardPage() {
             />
           </div>
         </div>
-        
+
         {/* Boutons de scan */}
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
           <ScanButton
-            icon={<Camera size={24} weight="bold" className="text-[#F7941D]" />}
+            icon={<Camera size={24} weight="bold" className="text-white" />}
             title="Scanner un repas"
             subtitle="Reconnaissance IA instantanée"
             onClick={handleScanMeal}
           />
-          
+
           <ScanButton
-            icon={<Barcode size={24} weight="bold" className="text-[#F7941D]" />}
+            icon={<Barcode size={24} weight="bold" className="text-white" />}
             title="Scanner un produit"
             subtitle="Lecture de codes-barres"
             onClick={handleScanProduct}
           />
         </div>
       </main>
-      
+
       <BottomNav />
     </div>
   );
