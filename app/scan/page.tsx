@@ -11,29 +11,84 @@ import { useCameraPermission } from "@/hooks/useCameraPermission";
 
 export default function ScanPage() {
   const router = useRouter();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState<"barcode" | "meal">("barcode");
-  const [detectedBarcode, setDetectedBarcode] = useState<string | null>(null);
   const [isTorchOn, setIsTorchOn] = useState(false);
+
+  // États séparés pour chaque mode
+  const [isScanningBarcode, setIsScanningBarcode] = useState(false);
+  const [isAnalyzingMeal, setIsAnalyzingMeal] = useState(false);
+  const [detectedBarcode, setDetectedBarcode] = useState<string | null>(null);
+
   const { hasPermission, requestPermission } = useCameraPermission();
 
   const handleClose = () => {
     router.back();
   };
 
-  const handleCapture = async () => {
-    setIsAnalyzing(true);
+  const handleMealCapture = async () => {
+    console.log("📸 [SCAN PAGE] Capture d'image du repas...");
+    setIsAnalyzingMeal(true);
 
     try {
-      // TODO: Implémenter la capture d'image pour le scan de repas
-      console.log("Capture d'image pour analyse");
+      // Récupérer le flux vidéo du MealScanner
+      const video = document.querySelector('video') as HTMLVideoElement;
+      if (!video) {
+        throw new Error('Vidéo non disponible');
+      }
 
-      setTimeout(() => {
-        setIsAnalyzing(false);
-      }, 3000);
+      console.log("📹 [SCAN PAGE] Vidéo trouvée:", {
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight,
+        readyState: video.readyState
+      });
+
+      // Créer un canvas pour capturer l'image
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) {
+        throw new Error('Impossible de créer le contexte canvas');
+      }
+
+      // Dessiner l'image de la vidéo sur le canvas
+      ctx.drawImage(video, 0, 0);
+
+      // Convertir en Blob
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Impossible de créer le blob'));
+        }, 'image/jpeg', 0.95);
+      });
+
+      console.log("✅ [SCAN PAGE] Image capturée:", {
+        size: blob.size,
+        type: blob.type,
+        sizeKB: (blob.size / 1024).toFixed(2) + ' KB'
+      });
+
+      // Importer dynamiquement le service
+      const { scanMeal } = await import("@/lib/mealscan.service");
+
+      console.log("🔍 [SCAN PAGE] Appel API pour analyser le repas...");
+      const result = await scanMeal(blob);
+
+      if (result.success && result.data) {
+        console.log("✅ [SCAN PAGE] Repas analysé:", result.data.foods_count, "aliments détectés");
+
+        // Rediriger vers la page de résultats du repas
+        router.push(`/meal/${result.data.id}`);
+      } else {
+        console.error("❌ [SCAN PAGE] Analyse échouée");
+        alert("Impossible d'analyser le repas. Veuillez réessayer.");
+        setIsAnalyzingMeal(false);
+      }
     } catch (error) {
-      console.error("Erreur lors de la capture:", error);
-      setIsAnalyzing(false);
+      console.error("❌ [SCAN PAGE] Erreur lors de la capture:", error);
+      alert(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      setIsAnalyzingMeal(false);
     }
   };
 
@@ -59,7 +114,7 @@ export default function ScanPage() {
   const handleBarcodeDetected = async (barcode: string) => {
     console.log("✅ [SCAN PAGE] Code-barres détecté:", barcode);
     setDetectedBarcode(barcode);
-    setIsAnalyzing(true);
+    setIsScanningBarcode(true);
 
     try {
       // Importer dynamiquement le service
@@ -76,12 +131,12 @@ export default function ScanPage() {
       } else {
         console.error("❌ [SCAN PAGE] Produit non trouvé");
         alert("Produit non trouvé. Vérifiez le code-barres.");
-        setIsAnalyzing(false);
+        setIsScanningBarcode(false);
       }
     } catch (error) {
       console.error("❌ [SCAN PAGE] Erreur lors du scan:", error);
       alert(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-      setIsAnalyzing(false);
+      setIsAnalyzingMeal(false);
     }
   };
 
@@ -154,8 +209,7 @@ export default function ScanPage() {
       {activeTab === "meal" && (
         <MealScanner
           isActive={activeTab === "meal"}
-          isAnalyzing={isAnalyzing}
-          onCapture={handleCapture}
+          isAnalyzing={isAnalyzingMeal}
         />
       )}
 
@@ -178,12 +232,22 @@ export default function ScanPage() {
         isTorchOn={isTorchOn}
       />
 
-      {/* Analyzing indicator */}
-      {isAnalyzing && (
+      {/* Analyzing indicator - mode code-barres */}
+      {isScanningBarcode && (
         <div className="absolute top-20 left-0 right-0 z-20 flex items-center justify-center">
           <div className="bg-black/70 backdrop-blur-md rounded-full px-6 py-3 flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-[#17a2b8] animate-pulse"></div>
-            <span className="text-white font-medium">Analyse en cours...</span>
+            <span className="text-white font-medium">Analyse du produit...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Analyzing indicator - mode repas */}
+      {isAnalyzingMeal && (
+        <div className="absolute top-20 left-0 right-0 z-20 flex items-center justify-center">
+          <div className="bg-black/70 backdrop-blur-md rounded-full px-6 py-3 flex items-center gap-3">
+            <div className="w-3 h-3 rounded-full bg-[#F7941D] animate-pulse"></div>
+            <span className="text-white font-medium">Analyse du repas...</span>
           </div>
         </div>
       )}
@@ -193,9 +257,9 @@ export default function ScanPage() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onGallery={handleGallery}
-        onCapture={handleCapture}
+        onCapture={handleMealCapture}
         onFlipCamera={handleFlipCamera}
-        isAnalyzing={isAnalyzing}
+        isAnalyzing={isAnalyzingMeal}
       />
     </div>
   );

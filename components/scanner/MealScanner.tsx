@@ -5,10 +5,9 @@ import { useRef, useEffect, useState } from "react";
 interface MealScannerProps {
     isActive: boolean;
     isAnalyzing: boolean;
-    onCapture: () => void;
 }
 
-export default function MealScanner({ isActive, isAnalyzing, onCapture }: MealScannerProps) {
+export default function MealScanner({ isActive, isAnalyzing }: MealScannerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [stream, setStream] = useState<MediaStream | null>(null);
 
@@ -74,9 +73,9 @@ export default function MealScanner({ isActive, isAnalyzing, onCapture }: MealSc
             {/* Dark overlay */}
             <div className="absolute inset-0 bg-black/40"></div>
 
-            {/* Scan frame */}
-            <div className="relative z-10 flex items-center justify-center" style={{ height: 'calc(100vh - 300px)' }}>
-                <div className="relative w-[90%] max-w-md aspect-[4/3]">
+            {/* Scan frame - centré verticalement sur tout l'écran */}
+            <div className="absolute inset-0 z-10 flex items-center justify-center px-4">
+                <div className="relative w-full max-w-md aspect-[4/3]">
                     {/* Corner borders with neon effect */}
                     <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                         <defs>
@@ -140,6 +139,13 @@ export default function MealScanner({ isActive, isAnalyzing, onCapture }: MealSc
                             <div className="absolute w-full h-1 bg-gradient-to-r from-transparent via-[#17a2b8] to-transparent animate-scan-line"></div>
                         </div>
                     )}
+
+                    {/* Instruction text */}
+                    <div className="absolute -bottom-16 left-0 right-0 text-center">
+                        <p className="text-white text-sm font-medium drop-shadow-lg">
+                            Placez votre repas dans le cadre
+                        </p>
+                    </div>
                 </div>
             </div>
         </>

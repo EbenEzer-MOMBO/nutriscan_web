@@ -42,7 +42,7 @@ export default function ScanControls({
                 </button>
             </div>
 
-            {/* Capture button */}
+            {/* Capture button - visible uniquement en mode repas */}
             <div className="flex items-center justify-center gap-8">
                 <button
                     onClick={onGallery}
@@ -64,15 +64,26 @@ export default function ScanControls({
                     </svg>
                 </button>
 
-                <button
-                    onClick={onCapture}
-                    disabled={isAnalyzing}
-                    className="w-20 h-20 flex items-center justify-center bg-white rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    <div className="w-16 h-16 rounded-full border-4 border-gray-300 flex items-center justify-center">
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] shadow-lg shadow-[#662D91]/30"></div>
+                {activeTab === "meal" && (
+                    <button
+                        onClick={onCapture}
+                        disabled={isAnalyzing}
+                        className="w-20 h-20 flex items-center justify-center bg-white rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <div className="w-16 h-16 rounded-full border-4 border-gray-300 flex items-center justify-center">
+                            <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] shadow-lg shadow-[#662D91]/30"></div>
+                        </div>
+                    </button>
+                )}
+
+                {activeTab === "barcode" && (
+                    <div className="w-20 h-20 flex items-center justify-center">
+                        <div className="text-center">
+                            <Barcode size={32} weight="bold" className="text-white/50 mx-auto mb-1" />
+                            <p className="text-xs text-white/50">Scan auto</p>
+                        </div>
                     </div>
-                </button>
+                )}
 
                 <button
                     onClick={onFlipCamera}
