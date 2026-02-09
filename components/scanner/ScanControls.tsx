@@ -46,7 +46,11 @@ export default function ScanControls({
             <div className="flex items-center justify-center gap-8">
                 <button
                     onClick={onGallery}
-                    className="w-14 h-14 flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors"
+                    disabled={activeTab === "barcode"}
+                    className={`w-14 h-14 flex items-center justify-center backdrop-blur-sm rounded-full transition-colors ${activeTab === "barcode"
+                            ? "bg-white/10 text-white/30 cursor-not-allowed"
+                            : "bg-white/20 text-white hover:bg-white/30"
+                        }`}
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

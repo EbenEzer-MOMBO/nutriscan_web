@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/components/dashboard/Header";
 import WeekCalendar from "@/components/dashboard/WeekCalendar";
 import CalorieProgress from "@/components/dashboard/CalorieProgress";
@@ -8,8 +9,15 @@ import MacroCard from "@/components/dashboard/MacroCard";
 import ScanButton from "@/components/dashboard/ScanButton";
 import BottomNav from "@/components/dashboard/BottomNav";
 import { Camera, Barcode } from "phosphor-react";
+import { UserProfile } from "@/lib/types/profile";
+import { getProfile } from "@/lib/profile.service";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     // Empêcher le geste de retour natif sur mobile
     const preventSwipeBack = (e: TouchEvent) => {
@@ -29,19 +37,39 @@ export default function DashboardPage() {
       document.removeEventListener('touchstart', preventSwipeBack);
     };
   }, []);
-  // Données exemple - à remplacer par des vraies données
-  const userData = {
-    name: "Utilisateur",
-    avatar: undefined,
-    calories: {
-      current: 1250,
-      goal: 2000,
-    },
-    macros: {
-      proteins: { current: 85, goal: 150 },
-      carbs: { current: 120, goal: 250 },
-      fats: { current: 45, goal: 70 },
-    },
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await getProfile();
+
+      if (result.success && result.data) {
+        setProfile(result.data);
+      } else {
+        // Pas de profil trouvé, rediriger vers l'onboarding
+        console.log("Pas de profil trouvé, redirection vers onboarding");
+        router.push("/onboarding-profile");
+      }
+    } catch (err) {
+      console.error("Erreur lors du chargement du profil:", err);
+      setError("Erreur lors du chargement du profil");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Données exemple pour la consommation actuelle (à remplacer par les vraies données des repas)
+  const currentConsumption = {
+    calories: 1250,
+    proteins: 85,
+    carbs: 120,
+    fats: 45,
   };
 
   const handleScanMeal = () => {
@@ -54,6 +82,44 @@ export default function DashboardPage() {
     window.location.href = "/scan";
   };
 
+  // Skeleton loader pendant le chargement
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-24">
+        <Header />
+        <main className="px-6 py-6 space-y-6">
+          <div className="animate-pulse space-y-6">
+            <div className="h-20 bg-gray-200 rounded-2xl"></div>
+            <div className="h-48 bg-gray-200 rounded-2xl"></div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="h-32 bg-gray-200 rounded-2xl"></div>
+              <div className="h-32 bg-gray-200 rounded-2xl"></div>
+              <div className="h-32 bg-gray-200 rounded-2xl"></div>
+            </div>
+          </div>
+        </main>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  // Erreur ou pas de profil
+  if (error || !profile) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">{error || "Profil non trouvé"}</p>
+          <button
+            onClick={() => router.push("/onboarding-profile")}
+            className="px-6 py-3 bg-gradient-to-r from-[#ED1C24] to-[#F7941D] text-white rounded-xl font-semibold"
+          >
+            Créer mon profil
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <Header />
@@ -64,8 +130,8 @@ export default function DashboardPage() {
 
         {/* Progression des calories */}
         <CalorieProgress
-          current={userData.calories.current}
-          goal={userData.calories.goal}
+          current={currentConsumption.calories}
+          goal={profile.daily_targets.calories}
         />
 
         {/* Macros quotidiennes */}
@@ -76,23 +142,23 @@ export default function DashboardPage() {
           <div className="grid grid-cols-3 gap-3">
             <MacroCard
               name="Protéines"
-              amount={userData.macros.proteins.current}
+              amount={currentConsumption.proteins}
               unit="g"
-              goal={userData.macros.proteins.goal}
+              goal={profile.daily_targets.proteins}
               color="#662D91"
             />
             <MacroCard
               name="Glucides"
-              amount={userData.macros.carbs.current}
+              amount={currentConsumption.carbs}
               unit="g"
-              goal={userData.macros.carbs.goal}
+              goal={profile.daily_targets.carbs}
               color="#F7941D"
             />
             <MacroCard
               name="Lipides"
-              amount={userData.macros.fats.current}
+              amount={currentConsumption.fats}
               unit="g"
-              goal={userData.macros.fats.goal}
+              goal={profile.daily_targets.fat}
               color="#17a2b8"
             />
           </div>

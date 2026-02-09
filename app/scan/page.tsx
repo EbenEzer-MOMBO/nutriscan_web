@@ -7,6 +7,7 @@ import ZXingBarcodeScanner from "@/components/scanner/ZXingBarcodeScanner";
 import MealScanner from "@/components/scanner/MealScanner";
 import ScanHeader from "@/components/scanner/ScanHeader";
 import ScanControls from "@/components/scanner/ScanControls";
+import AnalyzingOverlay from "@/components/scanner/AnalyzingOverlay";
 import { useCameraPermission } from "@/hooks/useCameraPermission";
 
 export default function ScanPage() {
@@ -97,15 +98,41 @@ export default function ScanPage() {
     // TODO: Implémenter le changement de caméra
   };
 
-  const handleGallery = () => {
+  const handleGallery = async () => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        console.log("Image sélectionnée:", file);
-        // TODO: Analyser l'image sélectionnée
+      if (!file) return;
+
+      console.log("🖼️ [SCAN PAGE] Image sélectionnée depuis la galerie:", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        sizeKB: (file.size / 1024).toFixed(2) + ' KB'
+      });
+
+      setIsAnalyzingMeal(true);
+
+      try {
+        const { scanMeal } = await import("@/lib/mealscan.service");
+
+        console.log("🔍 [SCAN PAGE] Appel API pour analyser l'image de la galerie...");
+        const result = await scanMeal(file);
+
+        if (result.success && result.data) {
+          console.log("✅ [SCAN PAGE] Repas analysé:", result.data.foods_count, "aliments détectés");
+          router.push(`/meal/${result.data.id}`);
+        } else {
+          console.error("❌ [SCAN PAGE] Analyse échouée");
+          alert("Impossible d'analyser le repas. Veuillez réessayer.");
+          setIsAnalyzingMeal(false);
+        }
+      } catch (error) {
+        console.error("❌ [SCAN PAGE] Erreur lors de l'analyse:", error);
+        alert(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+        setIsAnalyzingMeal(false);
       }
     };
     input.click();
@@ -260,6 +287,12 @@ export default function ScanPage() {
         onCapture={handleMealCapture}
         onFlipCamera={handleFlipCamera}
         isAnalyzing={isAnalyzingMeal}
+      />
+
+      {/* Overlay d'analyse full-screen */}
+      <AnalyzingOverlay
+        type={activeTab}
+        isVisible={isScanningBarcode || isAnalyzingMeal}
       />
     </div>
   );
