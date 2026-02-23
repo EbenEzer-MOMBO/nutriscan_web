@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getProfile } from "@/lib/profile.service";
 import { getJournal, getJournalMonth } from "@/lib/journal.service";
-import { getMealDetails, updateMeal, deleteMeal } from "@/lib/mealscan.service";
+import { getMealDetails, updateMeal, deleteMeal, getMealHistory } from "@/lib/mealscan.service";
 import type { UpdateMealData } from "@/lib/types/mealscan";
 
 export const queryKeys = {
@@ -71,6 +71,14 @@ export function useDeleteMeal() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["journal"] });
       queryClient.invalidateQueries({ queryKey: ["journal-month"] });
+      queryClient.invalidateQueries({ queryKey: ["meal-history"] });
     },
+  });
+}
+
+export function useMealHistory(page = 1, perPage = 20) {
+  return useQuery({
+    queryKey: ["meal-history", page, perPage],
+    queryFn: () => getMealHistory(page, perPage),
   });
 }

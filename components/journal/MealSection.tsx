@@ -74,7 +74,7 @@ function MealCard({
     <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4 hover:shadow-md transition-all active:scale-[0.98]">
       <div className="w-12 h-12 rounded-xl bg-white border-2 border-[#F7941D] flex items-center justify-center flex-shrink-0">
         <span style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.15))" }}>
-          <IconComponent size={24} weight="fill" className="text-white" />
+          <IconComponent size={24} weight="fill" className="text-[#F7941D]" />
         </span>
       </div>
       <div className="flex-1 min-w-0">

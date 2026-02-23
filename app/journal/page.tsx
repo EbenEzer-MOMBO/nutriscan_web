@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/components/dashboard/Header";
 import BottomNav from "@/components/dashboard/BottomNav";
 import CaloriesCard from "@/components/journal/CaloriesCard";
@@ -79,6 +80,7 @@ function todayStr(): string {
 }
 
 export default function JournalPage() {
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<string>(() => todayStr());
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const d = new Date();
@@ -118,7 +120,7 @@ export default function JournalPage() {
   const monthlyGoalStatus = monthData?.monthly_goal_status ?? {};
 
   const handleAddMeal = (mealType: string) => {
-    console.log("Ajouter un repas:", mealType);
+    router.push("/add");
   };
 
   const handleDeleteMeal = useCallback(

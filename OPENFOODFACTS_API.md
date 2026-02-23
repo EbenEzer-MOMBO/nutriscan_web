@@ -1,5 +1,9 @@
 # API OpenFoodFacts - Documentation
 
+## Vue d'ensemble
+
+Cette API permet de scanner des produits par code-barre via OpenFoodFacts et également **d'ajouter des produits manuellement** avec leurs données nutritionnelles.
+
 ## Endpoints Disponibles
 
 Tous les endpoints nécessitent une authentification via le token Bearer (Sanctum).
@@ -85,7 +89,115 @@ Content-Type: application/json
 
 ---
 
-### 2. Historique des Scans
+### 2. Ajouter un Produit Manuellement (sans scan)
+
+Ajoute un produit avec les données nutritionnelles saisies manuellement, sans scanner de code-barre.
+
+**Endpoint**: `POST /api/products/add-manual`
+
+**Headers**:
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Body**:
+```json
+{
+  "product_name": "Yaourt nature bio",
+  "brand": "Marque locale",
+  "quantity": 125,
+  "unit": "g",
+  "nutrition": {
+    "energy_kcal": 60,
+    "proteins": 4.5,
+    "carbohydrates": 5,
+    "sugars": 5,
+    "fat": 1.5,
+    "saturated_fat": 1,
+    "fiber": 0,
+    "sodium": 0.05
+  }
+}
+```
+
+**Champs requis** :
+- `product_name` : Nom du produit (string, max 255 caractères)
+- `quantity` : Quantité (number, min 0)
+- `unit` : Unité (string, max 50 caractères, ex: "g", "ml", "portion")
+- `nutrition.energy_kcal` : Calories (number, min 0)
+- `nutrition.proteins` : Protéines en g (number, min 0)
+- `nutrition.carbohydrates` : Glucides en g (number, min 0)
+- `nutrition.fat` : Lipides en g (number, min 0)
+
+**Champs optionnels** :
+- `brand` : Marque (string, max 255 caractères)
+- `nutrition.sugars` : Sucres en g (number, min 0)
+- `nutrition.saturated_fat` : Graisses saturées en g (number, min 0)
+- `nutrition.fiber` : Fibres en g (number, min 0)
+- `nutrition.sodium` : Sodium en g (number, min 0)
+
+**Exemple de requête** :
+```bash
+curl -X POST http://localhost:8000/api/products/add-manual \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "product_name": "Yaourt nature bio",
+    "brand": "Marque locale",
+    "quantity": 125,
+    "unit": "g",
+    "nutrition": {
+      "energy_kcal": 60,
+      "proteins": 4.5,
+      "carbohydrates": 5,
+      "fat": 1.5
+    }
+  }'
+```
+
+**Réponse Succès (201)**:
+```json
+{
+  "success": true,
+  "message": "Produit ajouté avec succès.",
+  "data": {
+    "id": 5,
+    "barcode": "manual-1708705200-7",
+    "product_name": "Yaourt nature bio",
+    "brands": "Marque locale",
+    "quantity": "125 g",
+    "image_url": null,
+    "nutriments": {
+      "energy_kcal": 60,
+      "proteins": 4.5,
+      "carbohydrates": 5,
+      "sugars": 5,
+      "fat": 1.5,
+      "saturated_fat": 1,
+      "fiber": 0,
+      "sodium": 0.05
+    },
+    "scanned_at": "2026-02-23T15:40:00+00:00",
+    "created_at": "2026-02-23T15:40:00+00:00"
+  }
+}
+```
+
+**Réponse Erreur - Validation (422)**:
+```json
+{
+  "message": "Le nom du produit est requis.",
+  "errors": {
+    "product_name": ["Le nom du produit est requis."],
+    "nutrition.energy_kcal": ["Les calories sont requises."]
+  }
+}
+```
+
+---
+
+### 3. Historique des Scans
 
 **Endpoint**: `GET /api/products/scan-history`
 
@@ -130,7 +242,7 @@ GET /api/products/scan-history?per_page=10&page=1&search=nutella
 
 ---
 
-### 3. Supprimer un Scan de l'Historique
+### 4. Supprimer un Scan de l'Historique
 
 **Endpoint**: `DELETE /api/products/scan-history/{id}`
 
@@ -157,7 +269,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 4. Vider Tout l'Historique
+### 5. Vider Tout l'Historique
 
 **Endpoint**: `DELETE /api/products/scan-history`
 
@@ -176,7 +288,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 5. Statistiques de Scan
+### 6. Statistiques de Scan
 
 **Endpoint**: `GET /api/products/scan-statistics`
 

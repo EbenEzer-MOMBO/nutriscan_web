@@ -89,6 +89,63 @@ export async function scanMeal(
     }
 }
 
+export interface ManualMealFood {
+    name: string;
+    quantity: number;
+    unit: string;
+    nutrition: {
+        energy_kcal: number;
+        proteins: number;
+        carbohydrates: number;
+        fat: number;
+        sugars?: number;
+        saturated_fat?: number;
+        fiber?: number;
+        sodium?: number;
+    };
+}
+
+export interface AddManualMealData {
+    meal_name: string;
+    meal_type?: MealType;
+    notes?: string;
+    foods: ManualMealFood[];
+}
+
+/**
+ * Ajouter un repas manuellement (sans scan d'image)
+ */
+export async function addManualMeal(data: AddManualMealData): Promise<ScanMealResponse> {
+    const token = getAuthToken();
+
+    if (!token) {
+        throw new Error('Non authentifié. Veuillez vous connecter.');
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/meals/add-manual`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            throw new Error(responseData.message || 'Erreur lors de l\'ajout du repas manuel');
+        }
+
+        return responseData;
+    } catch (error) {
+        console.error('❌ [MEAL API] Erreur ajout manuel:', error);
+        throw error;
+    }
+}
+
 /**
  * Récupérer l'historique des repas
  */

@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-Cette API permet de scanner des images de repas en utilisant OpenAI Vision (GPT-4o) pour identifier automatiquement les aliments, estimer les quantités et calculer les valeurs nutritionnelles complètes.
+Cette API permet de scanner des images de repas en utilisant OpenAI Vision (GPT-4o) pour identifier automatiquement les aliments, estimer les quantités et calculer les valeurs nutritionnelles complètes. Elle permet également **d'ajouter des repas manuellement** sans scan d'image.
 
 ## Configuration
 
@@ -125,7 +125,176 @@ curl -X POST http://localhost:8000/api/meals/scan \
 
 ---
 
-### 2. Historique des repas
+### 2. Ajouter un repas manuellement (sans scan)
+
+Ajoute un repas avec les données nutritionnelles saisies manuellement, sans passer par l'analyse d'image.
+
+**Endpoint** : `POST /api/meals/add-manual`
+
+**Headers** :
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Body** :
+```json
+{
+  "meal_name": "Déjeuner équilibré",
+  "meal_type": "lunch",
+  "notes": "Repas préparé à la maison",
+  "foods": [
+    {
+      "name": "Poulet grillé",
+      "quantity": 150,
+      "unit": "g",
+      "nutrition": {
+        "energy_kcal": 240,
+        "proteins": 36,
+        "carbohydrates": 0,
+        "sugars": 0,
+        "fat": 10,
+        "saturated_fat": 2.5,
+        "fiber": 0,
+        "sodium": 0.2
+      }
+    },
+    {
+      "name": "Riz basmati",
+      "quantity": 200,
+      "unit": "g",
+      "nutrition": {
+        "energy_kcal": 260,
+        "proteins": 5,
+        "carbohydrates": 56,
+        "sugars": 0.2,
+        "fat": 0.5,
+        "saturated_fat": 0.1,
+        "fiber": 1.2,
+        "sodium": 0.01
+      }
+    }
+  ]
+}
+```
+
+**Champs requis** :
+- `meal_name` : Nom du repas (string, max 255 caractères)
+- `foods` : Tableau d'aliments (minimum 1 aliment)
+  - `name` : Nom de l'aliment (string, max 255 caractères)
+  - `quantity` : Quantité (number, min 0)
+  - `unit` : Unité (string, max 50 caractères, ex: "g", "ml", "portion")
+  - `nutrition.energy_kcal` : Calories (number, min 0)
+  - `nutrition.proteins` : Protéines en g (number, min 0)
+  - `nutrition.carbohydrates` : Glucides en g (number, min 0)
+  - `nutrition.fat` : Lipides en g (number, min 0)
+
+**Champs optionnels** :
+- `meal_type` : Type de repas (`breakfast`, `lunch`, `dinner`, `snack`)
+- `notes` : Notes (string, max 1000 caractères)
+- `nutrition.sugars` : Sucres en g (number, min 0)
+- `nutrition.saturated_fat` : Graisses saturées en g (number, min 0)
+- `nutrition.fiber` : Fibres en g (number, min 0)
+- `nutrition.sodium` : Sodium en g (number, min 0)
+
+**Exemple de requête** :
+```bash
+curl -X POST http://localhost:8000/api/meals/add-manual \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "meal_name": "Déjeuner équilibré",
+    "meal_type": "lunch",
+    "foods": [
+      {
+        "name": "Poulet grillé",
+        "quantity": 150,
+        "unit": "g",
+        "nutrition": {
+          "energy_kcal": 240,
+          "proteins": 36,
+          "carbohydrates": 0,
+          "fat": 10
+        }
+      }
+    ]
+  }'
+```
+
+**Réponse (201 Created)** :
+```json
+{
+  "success": true,
+  "message": "Repas ajouté avec succès.",
+  "data": {
+    "id": 5,
+    "image_url": null,
+    "scanned_at": "2026-02-23T15:30:00+01:00",
+    "meal_type": "lunch",
+    "notes": "Repas préparé à la maison",
+    "foods_detected": [
+      {
+        "name": "Poulet grillé",
+        "type": "pesable",
+        "quantity_display": "150 g",
+        "quantity_value": 150,
+        "quantity_unit": "g",
+        "estimated_weight_grams": 150,
+        "confidence": "manual",
+        "nutrition": {
+          "energy_kcal": 240,
+          "proteins": 36,
+          "carbohydrates": 0,
+          "sugars": 0,
+          "fat": 10,
+          "saturated_fat": 2.5,
+          "fiber": 0,
+          "sodium": 0.2
+        }
+      },
+      {
+        "name": "Riz basmati",
+        "type": "pesable",
+        "quantity_display": "200 g",
+        "quantity_value": 200,
+        "quantity_unit": "g",
+        "estimated_weight_grams": 200,
+        "confidence": "manual",
+        "nutrition": {
+          "energy_kcal": 260,
+          "proteins": 5,
+          "carbohydrates": 56,
+          "sugars": 0.2,
+          "fat": 0.5,
+          "saturated_fat": 0.1,
+          "fiber": 1.2,
+          "sodium": 0.01
+        }
+      }
+    ],
+    "nutrition_summary": {
+      "energy_kcal": 500,
+      "proteins": 41,
+      "carbohydrates": 56,
+      "sugars": 0.2,
+      "fat": 10.5,
+      "saturated_fat": 2.6,
+      "fiber": 1.2,
+      "sodium": 0.21
+    },
+    "total_calories": 500,
+    "foods_count": 2,
+    "analysis_notes": "Repas ajouté manuellement"
+  }
+}
+```
+
+**Erreurs possibles** :
+- `422 Unprocessable Entity` : Données invalides (validation échouée)
+
+---
+
+### 3. Historique des repas
 
 Récupère l'historique des repas scannés de l'utilisateur.
 
@@ -172,7 +341,7 @@ GET /api/meals/history?meal_type=lunch&per_page=10
 
 ---
 
-### 3. Détails d'un repas
+### 4. Détails d'un repas
 
 Récupère les détails complets d'un repas scanné.
 
@@ -190,7 +359,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 4. Mettre à jour un repas
+### 5. Mettre à jour un repas
 
 Permet de modifier les quantités, le type de repas ou les notes.
 
@@ -229,7 +398,7 @@ Content-Type: application/json
 
 ---
 
-### 5. Supprimer un repas
+### 6. Supprimer un repas
 
 Supprime un repas de l'historique et son image associée.
 
@@ -250,7 +419,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 6. Statistiques quotidiennes
+### 7. Statistiques quotidiennes
 
 Récupère les statistiques nutritionnelles pour une journée.
 
@@ -287,7 +456,7 @@ GET /api/meals/statistics/daily?date=2026-02-08
 
 ---
 
-### 7. Statistiques hebdomadaires
+### 8. Statistiques hebdomadaires
 
 Récupère les statistiques nutritionnelles pour une semaine.
 
