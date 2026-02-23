@@ -9,7 +9,8 @@ interface CalorieProgressProps {
 
 export default function CalorieProgress({ current, goal }: CalorieProgressProps) {
   const [animatedPercentage, setAnimatedPercentage] = useState(0);
-  const percentage = Math.min((current / goal) * 100, 100);
+  const safeGoal = goal > 0 ? goal : 1;
+  const percentage = Math.min((current / safeGoal) * 100, 100);
   const remaining = Math.max(goal - current, 0);
 
   useEffect(() => {

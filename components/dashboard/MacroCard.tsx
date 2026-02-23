@@ -12,7 +12,8 @@ interface MacroCardProps {
 
 export default function MacroCard({ name, amount, unit, goal, color }: MacroCardProps) {
   const [animatedWidth, setAnimatedWidth] = useState(0);
-  const percentage = (amount / goal) * 100;
+  const safeGoal = goal > 0 ? goal : 1;
+  const percentage = (amount / safeGoal) * 100;
 
   useEffect(() => {
     // Animation de remplissage initial avec délai différent pour chaque carte

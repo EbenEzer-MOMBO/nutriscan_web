@@ -5,13 +5,15 @@ import { Lightning } from "phosphor-react";
 
 interface CaloriesCardProps {
   consumed: number;
+  /** 0 = objectif non défini (pas de profil) */
   goal: number;
 }
 
 export default function CaloriesCard({ consumed, goal }: CaloriesCardProps) {
   const [animatedWidth, setAnimatedWidth] = useState(0);
-  const percentage = Math.min((consumed / goal) * 100, 100);
-  const remaining = Math.max(goal - consumed, 0);
+  const hasGoal = goal > 0;
+  const percentage = hasGoal ? Math.min((consumed / goal) * 100, 100) : 0;
+  const remaining = hasGoal ? Math.max(goal - consumed, 0) : 0;
 
   useEffect(() => {
     // Animation de remplissage initial
@@ -35,21 +37,31 @@ export default function CaloriesCard({ consumed, goal }: CaloriesCardProps) {
         <span className="text-4xl font-bold bg-gradient-to-r from-[#ED1C24] to-[#F7941D] bg-clip-text text-transparent">
           {consumed}
         </span>
-        <span className="text-xl text-gray-400">/ {goal} kcal</span>
+        <span className="text-xl text-gray-400">
+          {hasGoal ? `/ ${goal} kcal` : " kcal"}
+        </span>
       </div>
 
-      {/* Progress bar with animation */}
-      <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-4">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] transition-all duration-1000 ease-out"
-          style={{
-            width: `${animatedWidth}%`,
-            boxShadow: '0 0 8px rgba(237, 28, 36, 0.4), 0 0 12px rgba(247, 148, 29, 0.3)',
-          }}
-        ></div>
-      </div>
-
-      <p className="text-sm text-gray-500">{remaining} kcal restantes</p>
+      {hasGoal && (
+        <>
+          <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-4">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] transition-all duration-1000 ease-out"
+              style={{
+                width: `${animatedWidth}%`,
+                boxShadow:
+                  "0 0 8px rgba(237, 28, 36, 0.4), 0 0 12px rgba(247, 148, 29, 0.3)",
+              }}
+            />
+          </div>
+          <p className="text-sm text-gray-500">{remaining} kcal restantes</p>
+        </>
+      )}
+      {!hasGoal && (
+        <p className="text-sm text-gray-500">
+          Définissez vos objectifs dans votre profil.
+        </p>
+      )}
     </div>
   );
 }

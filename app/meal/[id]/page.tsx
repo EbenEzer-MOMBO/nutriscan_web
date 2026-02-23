@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ForkKnife, Fire, Cookie, Drop } from "phosphor-react";
-import { ScannedMeal, DetectedFood } from "@/lib/types/mealscan";
+import { ScannedMeal, DetectedFood, MealType } from "@/lib/types/mealscan";
+import { useMealDetails, useUpdateMeal } from "@/lib/hooks/use-queries";
 import MealResultNavbar from "@/components/meal/MealResultNavbar";
 import NutrientBar from "@/components/meal/NutrientBar";
 import EditableFoodCard from "@/components/meal/EditableFoodCard";
@@ -11,41 +12,23 @@ import EditableFoodCard from "@/components/meal/EditableFoodCard";
 export default function MealPage() {
     const router = useRouter();
     const params = useParams();
-    const id = params.id as string;
+    const idParam = params.id as string;
+    const mealId = parseInt(idParam, 10);
+    const idValid = !isNaN(mealId) && mealId > 0;
 
-    const [meal, setMeal] = useState<ScannedMeal | null>(null);
+    const { data: mealResult, isLoading: loading, isError: hasError, error } = useMealDetails(idValid ? mealId : null);
+    const updateMealMutation = useUpdateMeal();
+
+    const meal = mealResult?.success ? mealResult.data : null;
     const [foods, setFoods] = useState<DetectedFood[]>([]);
     const [mealType, setMealType] = useState<string>("");
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [isAddingToJournal, setIsAddingToJournal] = useState(false);
-
-    const loadMeal = useCallback(async () => {
-        try {
-            setLoading(true);
-            const { getMealDetails } = await import("@/lib/mealscan.service");
-            const result = await getMealDetails(parseInt(id));
-
-            if (result.success && result.data) {
-                setMeal(result.data);
-                setFoods(result.data.foods_detected);
-                // Pré-remplir le type de repas si disponible
-                if (result.data.meal_type) {
-                    setMealType(result.data.meal_type);
-                }
-            } else {
-                setError("Repas non trouvé");
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Erreur inconnue");
-        } finally {
-            setLoading(false);
-        }
-    }, [id]);
 
     useEffect(() => {
-        loadMeal();
-    }, [loadMeal]);
+        if (meal) {
+            setFoods(meal.foods_detected ?? []);
+            if (meal.meal_type) setMealType(meal.meal_type);
+        }
+    }, [meal]);
 
     // Recalculer le résumé nutritionnel basé sur les aliments actuels
     const calculateNutritionSummary = () => {
@@ -94,28 +77,29 @@ export default function MealPage() {
     };
 
     const handleAddToJournal = async () => {
-        if (!mealType) {
+        if (!mealType || !meal) {
             alert("Veuillez sélectionner un type de repas");
             return;
         }
 
-        setIsAddingToJournal(true);
         try {
-            // TODO: Implémenter l'ajout au journal
-            console.log("Ajout au journal:", { mealType, foods, nutritionSummary });
-
-            // Simuler un délai
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-
+            await updateMealMutation.mutateAsync({
+                id: meal.id,
+                data: {
+                    meal_type: mealType as MealType,
+                    foods_detected: foods,
+                    ...(meal.notes != null && meal.notes !== "" && { notes: meal.notes }),
+                },
+            });
             alert("Repas ajouté au journal avec succès !");
             router.push("/journal");
-        } catch (error) {
-            console.error("Erreur lors de l'ajout au journal:", error);
-            alert("Erreur lors de l'ajout au journal");
-        } finally {
-            setIsAddingToJournal(false);
+        } catch (err) {
+            console.error("Erreur lors de l'ajout au journal:", err);
+            alert(err instanceof Error ? err.message : "Erreur lors de l'ajout au journal");
         }
     };
+
+    const isAddingToJournal = updateMealMutation.isPending;
 
     if (loading) {
         return (
@@ -128,7 +112,7 @@ export default function MealPage() {
         );
     }
 
-    if (error || !meal) {
+    if (hasError || !meal) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center px-4">
                 <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-lg text-center">
@@ -136,7 +120,7 @@ export default function MealPage() {
                         <ForkKnife size={32} className="text-red-600" />
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-3">Erreur d'analyse</h2>
-                    <p className="text-gray-600 mb-6">{error || "Le repas n'a pas pu être chargé"}</p>
+                    <p className="text-gray-600 mb-6">{error instanceof Error ? error.message : "Le repas n'a pas pu être chargé"}</p>
                     <button
                         onClick={() => router.push("/scan")}
                         className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#ED1C24] to-[#F7941D] text-white font-bold"
