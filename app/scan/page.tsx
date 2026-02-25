@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Camera } from "phosphor-react";
 import ZXingBarcodeScanner from "@/components/scanner/ZXingBarcodeScanner";
 import MealScanner from "@/components/scanner/MealScanner";
@@ -12,7 +12,11 @@ import { useCameraPermission } from "@/hooks/useCameraPermission";
 
 export default function ScanPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"barcode" | "meal">("barcode");
+  const searchParams = useSearchParams();
+  
+  // Lire le mode depuis l'URL (par défaut 'barcode')
+  const initialMode = searchParams.get('mode') === 'meal' ? 'meal' : 'barcode';
+  const [activeTab, setActiveTab] = useState<"barcode" | "meal">(initialMode);
   const [isTorchOn, setIsTorchOn] = useState(false);
 
   // États séparés pour chaque mode
@@ -237,6 +241,7 @@ export default function ScanPage() {
         <MealScanner
           isActive={activeTab === "meal"}
           isAnalyzing={isAnalyzingMeal}
+          isTorchOn={isTorchOn}
         />
       )}
 

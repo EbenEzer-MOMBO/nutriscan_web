@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { User, getUser, getAuthToken, isAuthenticated, logout } from '@/lib/auth.service';
 
 export function useAuth() {
@@ -11,6 +12,7 @@ export function useAuth() {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Charger les données d'authentification au montage
@@ -40,9 +42,17 @@ export function useAuth() {
   }, []);
 
   const handleLogout = () => {
+    // Vider le cache de toutes les requêtes
+    queryClient.clear();
+    
+    // Déconnexion (supprime les données localStorage)
     logout();
+    
+    // Mettre à jour l'état local
     setUser(null);
     setToken(null);
+    
+    // Rediriger vers la page de login
     router.push('/login');
   };
 

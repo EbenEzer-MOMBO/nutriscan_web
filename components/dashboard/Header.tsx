@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
-import { Bell } from "phosphor-react";
+import { Bell, User } from "phosphor-react";
 import { useAuth } from "@/hooks/useAuth";
 import { getProfilePhotoUrl, getInitials } from "@/lib/image.utils";
+import Image from "next/image";
 
 export default function Header() {
   const { user } = useAuth();
@@ -24,9 +24,7 @@ export default function Header() {
               className="object-cover w-full h-full" 
             />
           ) : (
-            <span className="text-white font-bold text-lg">
-              {user ? getInitials(user.name || "N") : "N"}
-            </span>
+            <User size={24} weight="fill" className="text-white" />
           )}
         </div>
       </div>

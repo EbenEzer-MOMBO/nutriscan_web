@@ -70,11 +70,11 @@ export default function DashboardPage() {
   const monthlyGoalStatus = monthData?.monthly_goal_status ?? {};
 
   const handleScanMeal = () => {
-    window.location.href = "/scan";
+    router.push("/scan?mode=meal");
   };
 
   const handleScanProduct = () => {
-    window.location.href = "/scan";
+    router.push("/scan?mode=barcode");
   };
 
   if (profileLoading) {

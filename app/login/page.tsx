@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 import AppleSignin from "react-apple-signin-auth";
 import { loginWithGoogle, loginWithApple } from "@/lib/auth.service";
+import { getProfile } from "@/lib/profile.service";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 const APPLE_CLIENT_ID = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "";
@@ -56,8 +57,17 @@ function LoginContent() {
         
         if (response.success && response.data) {
           console.log("Connexion réussie:", response.data.user);
-          // Rediriger vers le dashboard
-          router.push("/dashboard");
+          
+          // Vérifier si l'utilisateur a un profil
+          const profileResponse = await getProfile();
+          
+          if (profileResponse.success && profileResponse.data) {
+            console.log("Profil existant trouvé, redirection vers dashboard");
+            router.push("/dashboard");
+          } else {
+            console.log("Aucun profil trouvé, redirection vers onboarding");
+            router.push("/onboarding-profile");
+          }
         } else {
           setError(response.error || "Erreur lors de la connexion");
           console.error("Erreur connexion:", response.error);
@@ -114,8 +124,17 @@ function LoginContent() {
       
       if (authResponse.success && authResponse.data) {
         console.log("Connexion Apple réussie:", authResponse.data.user);
-        // Rediriger vers le dashboard
-        router.push("/dashboard");
+        
+        // Vérifier si l'utilisateur a un profil
+        const profileResponse = await getProfile();
+        
+        if (profileResponse.success && profileResponse.data) {
+          console.log("Profil existant trouvé, redirection vers dashboard");
+          router.push("/dashboard");
+        } else {
+          console.log("Aucun profil trouvé, redirection vers onboarding");
+          router.push("/onboarding-profile");
+        }
       } else {
         setError(authResponse.error || "Erreur lors de la connexion avec Apple");
         console.error("Erreur connexion Apple:", authResponse.error);

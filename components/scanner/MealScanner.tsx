@@ -5,9 +5,10 @@ import { useRef, useEffect, useState } from "react";
 interface MealScannerProps {
     isActive: boolean;
     isAnalyzing: boolean;
+    isTorchOn?: boolean;
 }
 
-export default function MealScanner({ isActive, isAnalyzing }: MealScannerProps) {
+export default function MealScanner({ isActive, isAnalyzing, isTorchOn = false }: MealScannerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [stream, setStream] = useState<MediaStream | null>(null);
 
@@ -22,6 +23,38 @@ export default function MealScanner({ isActive, isAnalyzing }: MealScannerProps)
             stopCamera();
         };
     }, [isActive]);
+
+    // Contrôler la torche
+    useEffect(() => {
+        if (!stream) return;
+        
+        const track = stream.getVideoTracks()[0];
+        if (!track) {
+            console.log("⚠️ [MEAL SCANNER] Aucune piste vidéo trouvée");
+            return;
+        }
+
+        const toggleTorch = async () => {
+            try {
+                const capabilities = track.getCapabilities() as any;
+
+                if (!capabilities.torch) {
+                    console.log("⚠️ [MEAL SCANNER] La torche n'est pas supportée sur cet appareil");
+                    return;
+                }
+
+                await track.applyConstraints({
+                    advanced: [{ torch: isTorchOn } as any]
+                });
+
+                console.log(`🔦 [MEAL SCANNER] Torche ${isTorchOn ? 'allumée' : 'éteinte'}`);
+            } catch (err) {
+                console.error("❌ [MEAL SCANNER] Erreur lors du contrôle de la torche:", err);
+            }
+        };
+
+        toggleTorch();
+    }, [isTorchOn, stream]);
 
     const startCamera = async () => {
         try {

@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/lib/hooks/use-queries";
 import BottomNav from "@/components/dashboard/BottomNav";
-import { Bell, Lock, Question, CheckCircle, CaretRight, Fire, SignOut } from "phosphor-react";
+import { Bell, Lock, Question, CheckCircle, CaretRight, Fire, SignOut, User, X, Warning } from "phosphor-react";
 import Image from "next/image";
 import { getProfilePhotoUrl, getInitials } from "@/lib/image.utils";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { user, logout, loading } = useAuth();
+  const { data: profileResult, isLoading: profileLoading } = useProfile();
+  const profile = profileResult?.success ? profileResult.data : null;
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     // Empêcher le geste de retour natif sur mobile
@@ -42,7 +46,20 @@ export default function SettingsPage() {
   // Obtenir l'URL de la photo corrigée
   const photoUrl = user ? getProfilePhotoUrl(user) : null;
 
-  if (loading) {
+  // Gérer la déconnexion avec confirmation
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    logout();
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutConfirm(false);
+  };
+
+  if (loading || profileLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -70,8 +87,8 @@ export default function SettingsPage() {
                 />
               </div>
             ) : (
-              <div className="w-24 h-24 rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                {user ? getInitials(user.name || "NU") : "NU"}
+              <div className="w-24 h-24 rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] flex items-center justify-center shadow-lg">
+                <User size={48} weight="fill" className="text-white" />
               </div>
             )}
             <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-[#17a2b8] border-4 border-white flex items-center justify-center">
@@ -96,7 +113,12 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">Objectif calorique</h3>
-              <p className="text-2xl font-bold text-gray-900">2,200 kcal / jour</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {profile?.daily_targets.calories 
+                  ? `${profile.daily_targets.calories.toLocaleString('fr-FR')} kcal / jour`
+                  : "Non défini"
+                }
+              </p>
             </div>
             <div className="w-12 h-12 rounded-full bg-[#17a2b8]/10 flex items-center justify-center">
               <Fire size={24} weight="fill" className="text-[#17a2b8]" />
@@ -150,12 +172,47 @@ export default function SettingsPage() {
             <SettingsItem
               icon={<SignOut size={24} weight="fill" className="text-[#ED1C24]" />}
               title="Déconnexion"
-              onClick={logout}
+              onClick={handleLogoutClick}
               isLast
             />
           </div>
         </div>
       </main>
+      
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-fadeIn">
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#ED1C24] to-[#F7941D] flex items-center justify-center">
+                <Warning size={32} weight="fill" className="text-white" />
+              </div>
+            </div>
+            
+            <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+              Confirmer la déconnexion
+            </h2>
+            <p className="text-gray-600 text-center mb-6">
+              Êtes-vous sûr de vouloir vous déconnecter ?
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={handleLogoutCancel}
+                className="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-all active:scale-98"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleLogoutConfirm}
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#ED1C24] to-[#F7941D] text-white font-semibold hover:opacity-90 transition-all active:scale-98"
+              >
+                Déconnexion
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <BottomNav />
     </div>
