@@ -123,6 +123,13 @@ export default function JournalPage() {
     router.push("/add");
   };
 
+  const handleEditMeal = useCallback(
+    (mealId: string) => {
+      router.push(`/meal/${mealId}`);
+    },
+    [router]
+  );
+
   const handleDeleteMeal = useCallback(
     (mealId: string) => {
       if (!confirm("Supprimer ce repas du journal ?")) return;
@@ -177,6 +184,7 @@ export default function JournalPage() {
               meals={grouped?.breakfast ?? []}
               onAdd={() => handleAddMeal("breakfast")}
               onDelete={handleDeleteMeal}
+              onEdit={handleEditMeal}
               iconType="breakfast"
             />
             <MealSection
@@ -184,6 +192,7 @@ export default function JournalPage() {
               meals={grouped?.lunch ?? []}
               onAdd={() => handleAddMeal("lunch")}
               onDelete={handleDeleteMeal}
+              onEdit={handleEditMeal}
               iconType="lunch"
             />
             <MealSection
@@ -191,6 +200,7 @@ export default function JournalPage() {
               meals={grouped?.dinner ?? []}
               onAdd={() => handleAddMeal("dinner")}
               onDelete={handleDeleteMeal}
+              onEdit={handleEditMeal}
               iconType="dinner"
             />
             <MealSection
@@ -198,6 +208,7 @@ export default function JournalPage() {
               meals={grouped?.snacks ?? []}
               onAdd={() => handleAddMeal("snacks")}
               onDelete={handleDeleteMeal}
+              onEdit={handleEditMeal}
               iconType="snack"
             />
           </>

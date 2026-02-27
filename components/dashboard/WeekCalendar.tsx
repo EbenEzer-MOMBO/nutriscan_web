@@ -55,7 +55,26 @@ export default function WeekCalendar({ monthlyGoalStatus = {} }: WeekCalendarPro
           const status = monthlyGoalStatus[weekDates[index]] ?? "no_data";
           const isToday = index === currentDayIndex;
           const isReached = status === "reached";
+          const isPartiallyReached = status === "partially_reached";
           const isNotReached = status === "not_reached";
+          
+          // Déterminer les classes de couleur
+          let circleClass = "bg-gray-100 text-gray-400";
+          let dotClass = "bg-gray-400";
+          
+          if (isToday) {
+            circleClass = "bg-gradient-to-r from-[#ED1C24] to-[#F7941D] text-white";
+            dotClass = "bg-white";
+          } else if (isReached) {
+            circleClass = "bg-green-100";
+            dotClass = "bg-green-500";
+          } else if (isPartiallyReached) {
+            circleClass = "bg-orange-100";
+            dotClass = "bg-orange-500";
+          } else if (isNotReached) {
+            circleClass = "bg-red-100";
+            dotClass = "bg-red-500";
+          }
 
           return (
             <div key={index} className="flex flex-col items-center">
@@ -66,28 +85,8 @@ export default function WeekCalendar({ monthlyGoalStatus = {} }: WeekCalendarPro
               >
                 {day}
               </span>
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  isToday
-                    ? "bg-gradient-to-r from-[#ED1C24] to-[#F7941D] text-white"
-                    : isReached
-                      ? "bg-green-100"
-                      : isNotReached
-                        ? "bg-red-100"
-                        : "bg-gray-100 text-gray-400"
-                }`}
-              >
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    isToday
-                      ? "bg-white"
-                      : isReached
-                        ? "bg-green-500"
-                        : isNotReached
-                          ? "bg-red-500"
-                          : "bg-gray-400"
-                  }`}
-                />
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${circleClass}`}>
+                <div className={`w-2 h-2 rounded-full ${dotClass}`} />
               </div>
             </div>
           );

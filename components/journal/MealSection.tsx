@@ -17,6 +17,7 @@ interface MealSectionProps {
   meals: MealItem[];
   onAdd: () => void;
   onDelete?: (id: string) => void;
+  onEdit?: (id: string) => void;
   iconType?: MealSectionIconType;
 }
 
@@ -32,6 +33,7 @@ export default function MealSection({
   meals,
   onAdd,
   onDelete,
+  onEdit,
   iconType = "snack",
 }: MealSectionProps) {
   const IconComponent = SECTION_ICONS[iconType];
@@ -45,6 +47,7 @@ export default function MealSection({
             key={item.id}
             item={item}
             onDelete={onDelete}
+            onEdit={onEdit}
             IconComponent={IconComponent}
           />
         ))}
@@ -64,20 +67,33 @@ export default function MealSection({
 function MealCard({
   item,
   onDelete,
+  onEdit,
   IconComponent,
 }: {
   item: MealItem;
   onDelete?: (id: string) => void;
+  onEdit?: (id: string) => void;
   IconComponent: React.ComponentType<{ size?: number; weight?: "fill" | "regular" | "duotone" | "bold"; className?: string }>;
 }) {
+  const handleClick = () => {
+    if (onEdit) {
+      onEdit(item.id);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4 hover:shadow-md transition-all active:scale-[0.98]">
+    <button
+      onClick={handleClick}
+      className={`w-full bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4 transition-all active:scale-[0.98] ${
+        onEdit ? "hover:shadow-md cursor-pointer" : "cursor-default"
+      }`}
+    >
       <div className="w-12 h-12 rounded-xl bg-white border-2 border-[#F7941D] flex items-center justify-center flex-shrink-0">
         <span style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.15))" }}>
           <IconComponent size={24} weight="fill" className="text-[#F7941D]" />
         </span>
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 text-left">
         <h4 className="font-bold text-gray-900 mb-1 truncate">{item.name}</h4>
         <p className="text-sm text-gray-500">{item.time}</p>
       </div>
@@ -97,7 +113,7 @@ function MealCard({
           </button>
         )}
       </div>
-    </div>
+    </button>
   );
 }
 

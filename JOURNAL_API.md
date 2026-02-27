@@ -103,11 +103,11 @@ curl -X GET "http://localhost:8000/api/journal?date=2026-02-23" \
     "fat": 73.3
   },
   "goal_status": {
-    "calories_reached": true,
-    "proteins_reached": false,
-    "carbs_reached": true,
-    "fat_reached": true,
-    "overall_reached": false
+    "calories_reached": "reached",
+    "proteins_reached": "partially_reached",
+    "carbs_reached": "reached",
+    "fat_reached": "reached",
+    "overall_reached": "partially_reached"
   }
 }
 ```
@@ -149,11 +149,11 @@ Si l'utilisateur n'a pas encore créé de profil, les objectifs et le statut ne 
   },
   "goals": { "calories": 2200, "proteins": 110.0, "carbohydrates": 275.0, "fat": 73.3 },
   "goal_status": {
-    "calories_reached": false,
-    "proteins_reached": false,
-    "carbs_reached": false,
-    "fat_reached": false,
-    "overall_reached": false
+    "calories_reached": "not_reached",
+    "proteins_reached": "not_reached",
+    "carbs_reached": "not_reached",
+    "fat_reached": "not_reached",
+    "overall_reached": "not_reached"
   }
 }
 ```
@@ -219,14 +219,14 @@ curl -X GET "http://localhost:8000/api/journal/month?year=2026&month=2" \
     "2026-02-01": "not_reached",
     "2026-02-02": "reached",
     "2026-02-03": "reached",
-    "2026-02-04": "reached",
+    "2026-02-04": "partially_reached",
     "2026-02-05": "reached",
     "2026-02-06": "not_reached",
     "2026-02-07": "reached",
     "2026-02-08": "not_reached",
     "2026-02-09": "reached",
     "2026-02-10": "reached",
-    "2026-02-11": "reached",
+    "2026-02-11": "partially_reached",
     "2026-02-12": "reached",
     "2026-02-13": "reached",
     "2026-02-14": "reached",
@@ -235,7 +235,7 @@ curl -X GET "http://localhost:8000/api/journal/month?year=2026&month=2" \
     "2026-02-17": "not_reached",
     "2026-02-18": "not_reached",
     "2026-02-19": "reached",
-    "2026-02-20": "reached",
+    "2026-02-20": "partially_reached",
     "2026-02-21": "reached",
     "2026-02-22": "reached",
     "2026-02-23": "no_data",
@@ -249,11 +249,12 @@ curl -X GET "http://localhost:8000/api/journal/month?year=2026&month=2" \
 ```
 
 **Valeurs de `monthly_goal_status[date]`** :
-| Valeur         | Signification | Affichage type (calendrier) |
-|----------------|---------------|------------------------------|
-| `reached`      | Objectif du jour atteint (fourchette 80–120 %) | Fond vert / point vert |
-| `not_reached`  | Objectif du jour non atteint | Fond rouge / point rouge |
-| `no_data`      | Aucun repas enregistré ce jour, ou pas de profil | Pas de couleur / jour neutre |
+| Valeur               | Signification | Affichage type (calendrier) |
+|----------------------|---------------|------------------------------|
+| `reached`            | Objectif du jour pleinement atteint (100-120 %) | Fond vert / point vert |
+| `partially_reached`  | Objectif du jour partiellement atteint (80-99 %) | Fond orange / point orange |
+| `not_reached`        | Objectif du jour non atteint (< 80 %) | Fond rouge / point rouge |
+| `no_data`            | Aucun repas enregistré ce jour, ou pas de profil | Pas de couleur / jour neutre |
 
 Le front peut utiliser directement `monthly_goal_status[date]` pour colorer chaque case du mois (ex. pour « Février 2026 »).
 
@@ -263,17 +264,25 @@ Le front peut utiliser directement `monthly_goal_status[date]` pour colorer chaq
 
 Le champ `goal_status` est calculé uniquement si l'utilisateur possède un profil avec des objectifs quotidiens.
 
-Pour chaque indicateur (calories, protéines, glucides, lipides), l'objectif est considéré **atteint** si la valeur consommée se situe entre **80 % et 120 %** de l'objectif du jour :
+Pour chaque indicateur (calories, protéines, glucides, lipides), trois niveaux sont possibles :
 
-| Champ                | Description |
-|----------------------|-------------|
-| `calories_reached`   | `true` si `consumed.total_calories` ∈ [objectif × 0,8 ; objectif × 1,2] |
-| `proteins_reached`   | Idem pour les protéines |
-| `carbs_reached`      | Idem pour les glucides |
-| `fat_reached`        | Idem pour les lipides |
-| `overall_reached`    | `true` si les quatre indicateurs ci-dessus sont atteints |
+| Statut | Condition | Signification |
+|--------|-----------|---------------|
+| **`reached`** | Consommé entre 100 % et 120 % de l'objectif | Objectif pleinement atteint ✅ |
+| **`partially_reached`** | Consommé entre 80 % et 99 % de l'objectif | Objectif partiellement atteint ⚠️ |
+| **`not_reached`** | Consommé < 80 % de l'objectif | Objectif non atteint ❌ |
 
-Exemple : pour un objectif de 2200 kcal, la fourchette est 1760–2640 kcal.
+**Exemples** pour un objectif de 2200 kcal :
+- **2300 kcal** (104 %) → `reached`
+- **1900 kcal** (86 %) → `partially_reached`
+- **1600 kcal** (73 %) → `not_reached`
+
+### Statut global (`overall_reached`)
+
+Le statut global est calculé ainsi :
+- **`reached`** : tous les indicateurs (calories, protéines, glucides, lipides) sont à `reached`
+- **`partially_reached`** : au moins un indicateur est à `partially_reached`, aucun à `not_reached`
+- **`not_reached`** : au moins un indicateur est à `not_reached`
 
 ---
 
@@ -301,7 +310,10 @@ Objectifs quotidiens issus du profil : `calories`, `proteins`, `carbohydrates`, 
 
 ### `goal_status` (si profil existant)
 
-Booléens par indicateur + `overall_reached` comme indiqué ci-dessus.
+Statuts par indicateur + `overall_reached` :
+- `"reached"` : 100-120 % de l'objectif ✅
+- `"partially_reached"` : 80-99 % de l'objectif ⚠️
+- `"not_reached"` : < 80 % de l'objectif ❌
 
 ### `monthly_goal_status` (endpoint GET /api/journal/month)
 

@@ -19,13 +19,16 @@ export interface JournalGoals {
     fat: number;
 }
 
-/** Statut d'atteinte des objectifs (80 % – 120 % par indicateur) */
+/** Statut individuel pour un indicateur nutritionnel */
+export type GoalStatusValue = 'reached' | 'partially_reached' | 'not_reached';
+
+/** Statut d'atteinte des objectifs par indicateur (nouveau format API) */
 export interface JournalGoalStatus {
-    calories_reached: boolean;
-    proteins_reached: boolean;
-    carbs_reached: boolean;
-    fat_reached: boolean;
-    overall_reached: boolean;
+    calories_reached: GoalStatusValue;
+    proteins_reached: GoalStatusValue;
+    carbs_reached: GoalStatusValue;
+    fat_reached: GoalStatusValue;
+    overall_reached: GoalStatusValue;
 }
 
 /** Réponse GET /api/journal */
@@ -47,7 +50,7 @@ export interface JournalValidationError {
 }
 
 /** Statut objectif pour un jour (vue mensuelle) */
-export type JournalDayStatus = 'reached' | 'not_reached' | 'no_data';
+export type JournalDayStatus = 'reached' | 'partially_reached' | 'not_reached' | 'no_data';
 
 /** Réponse GET /api/journal/month — vue mensuelle calendrier */
 export interface JournalMonthResponse {

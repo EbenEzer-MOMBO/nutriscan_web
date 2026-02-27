@@ -10,6 +10,7 @@ interface CalendarDay {
   isToday: boolean;
   hasData: boolean;
   goalAchieved: boolean;
+  partiallyAchieved: boolean;
   dateStr: string;
 }
 
@@ -77,6 +78,7 @@ export default function MonthCalendar({
         isToday: false,
         hasData: false,
         goalAchieved: false,
+        partiallyAchieved: false,
         dateStr: toDateStr(prevMonthYear, prevMonth, d),
       });
     }
@@ -92,6 +94,17 @@ export default function MonthCalendar({
       const status = statusByDate?.[dateStr];
       const hasData = status !== undefined && status !== "no_data";
       const goalAchieved = status === "reached";
+      const partiallyAchieved = status === "partially_reached";
+
+      // Log de débogage pour identifier les jours avec données
+      if (hasData && day <= 3) {
+        console.log(`📆 [MonthCalendar] ${dateStr}:`, {
+          status,
+          goalAchieved,
+          partiallyAchieved,
+          hasData,
+        });
+      }
 
       days.push({
         day,
@@ -99,6 +112,7 @@ export default function MonthCalendar({
         isToday,
         hasData,
         goalAchieved,
+        partiallyAchieved,
         dateStr,
       });
     }
@@ -115,6 +129,7 @@ export default function MonthCalendar({
         isToday: false,
         hasData: false,
         goalAchieved: false,
+        partiallyAchieved: false,
         dateStr: toDateStr(nextMonthYear, nextMonth, day),
       });
     }
@@ -169,6 +184,27 @@ export default function MonthCalendar({
         {days.map((day, index) => {
           const isSelected =
             selectedDate && day.isCurrentMonth && day.dateStr === selectedDate;
+          
+          // Déterminer la couleur du background
+          let bgClass = "";
+          if (day.isToday && !isSelected) {
+            bgClass = "bg-gradient-to-r from-[#ED1C24] to-[#F7941D] text-white font-bold";
+          } else if (isSelected) {
+            bgClass = "ring-2 ring-[#17a2b8] ring-offset-2 bg-teal-50 text-gray-900 font-bold";
+          } else if (day.isCurrentMonth && day.hasData) {
+            if (day.goalAchieved) {
+              bgClass = "bg-green-100 text-green-700";
+            } else if (day.partiallyAchieved) {
+              bgClass = "bg-orange-100 text-orange-700";
+            } else {
+              bgClass = "bg-red-100 text-red-700";
+            }
+          } else if (day.isCurrentMonth) {
+            bgClass = "text-gray-700 hover:bg-gray-100";
+          } else {
+            bgClass = "text-gray-300 cursor-default";
+          }
+          
           return (
             <button
               key={index}
@@ -176,20 +212,19 @@ export default function MonthCalendar({
               onClick={() => day.isCurrentMonth && onSelectDate?.(day.dateStr)}
               className={`
                 aspect-square flex items-center justify-center rounded-lg text-sm font-medium transition-all relative
-                ${!day.isCurrentMonth && "text-gray-300 cursor-default"}
-                ${day.isCurrentMonth && "cursor-pointer"}
-                ${day.isCurrentMonth && !day.isToday && !isSelected && "text-gray-700 hover:bg-gray-100"}
-                ${day.isToday && !isSelected && "bg-gradient-to-r from-[#ED1C24] to-[#F7941D] text-white font-bold"}
-                ${isSelected && "ring-2 ring-[#17a2b8] ring-offset-2 bg-teal-50 text-gray-900 font-bold"}
-                ${day.hasData && day.goalAchieved && !day.isToday && !isSelected && "bg-green-100 text-green-700"}
-                ${day.hasData && !day.goalAchieved && !day.isToday && !isSelected && "bg-red-100 text-red-700"}
+                ${day.isCurrentMonth ? "cursor-pointer" : "cursor-default"}
+                ${bgClass}
               `}
             >
               {day.day}
               {day.hasData && !day.isToday && (
                 <div
                   className={`absolute bottom-1 w-1 h-1 rounded-full ${
-                    day.goalAchieved ? "bg-green-500" : "bg-red-500"
+                    day.goalAchieved 
+                      ? "bg-green-500" 
+                      : day.partiallyAchieved 
+                        ? "bg-orange-500" 
+                        : "bg-red-500"
                   }`}
                 />
               )}
@@ -203,6 +238,10 @@ export default function MonthCalendar({
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-full bg-green-500"></div>
           <span className="text-gray-600">Objectif atteint</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+          <span className="text-gray-600">~80%</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-full bg-red-500"></div>

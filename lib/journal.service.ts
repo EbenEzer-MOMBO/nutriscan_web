@@ -107,5 +107,13 @@ export async function getJournalMonth(
         );
     }
 
+    // Log pour déboguer les statuts retournés par l'API
+    console.log('📅 [Journal Month] Données reçues:', {
+        year: data.year,
+        month: data.month,
+        statuts: Object.entries(data.monthly_goal_status || {})
+            .filter(([_, status]) => status !== 'no_data'), // Afficher les 5 premiers jours avec données
+    });
+
     return data as JournalMonthResponse;
 }
