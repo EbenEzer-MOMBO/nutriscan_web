@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/dashboard/Header";
 import BottomNav from "@/components/dashboard/BottomNav";
-import { MagnifyingGlass, Clock, Camera, Barcode } from "phosphor-react";
-import { useMealHistory } from "@/lib/hooks/use-queries";
+import { MagnifyingGlass, Clock, Camera, Barcode, ForkKnife, Coffee, Moon, Cookie } from "phosphor-react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { getMealHistory } from "@/lib/mealscan.service";
 import Image from "next/image";
 
-const MEAL_TYPE_ICONS: Record<string, string> = {
-  breakfast: "🍳",
-  lunch: "🍽️",
-  dinner: "🌙",
-  snack: "🍎",
+const MEAL_TYPE_ICONS: Record<string, React.ComponentType<any>> = {
+  breakfast: Coffee,
+  lunch: ForkKnife,
+  dinner: Moon,
+  snack: Cookie,
 };
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
@@ -42,7 +43,51 @@ function formatDate(isoDate: string): string {
 export default function AddPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: historyData, isLoading } = useMealHistory(1, 10);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  // Utiliser useInfiniteQuery pour le scroll infini
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["meal-history-infinite"],
+    queryFn: ({ pageParam = 1 }) => getMealHistory(pageParam, 20),
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage.success || !lastPage.data) return undefined;
+      const currentPage = lastPage.meta.current_page;
+      const totalPages = lastPage.meta.last_page;
+      return currentPage < totalPages ? currentPage + 1 : undefined;
+    },
+    initialPageParam: 1,
+  });
+
+  // Observer pour détecter quand l'utilisateur atteint le bas
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          console.log("🔄 [INFINITE SCROLL] Chargement de la page suivante");
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
     const preventSwipeBack = (e: TouchEvent) => {
@@ -54,21 +99,23 @@ export default function AddPage() {
     return () => document.removeEventListener("touchstart", preventSwipeBack);
   }, []);
 
-  const recentMeals = historyData?.data ?? [];
+  // Combiner toutes les pages de résultats
+  const allMeals = data?.pages.flatMap((page) => page.data ?? []) ?? [];
+  
   const filteredMeals = searchQuery
-    ? recentMeals.filter((meal) =>
+    ? allMeals.filter((meal) =>
         MEAL_TYPE_LABELS[meal.meal_type ?? "snack"]
           ?.toLowerCase()
           .includes(searchQuery.toLowerCase())
       )
-    : recentMeals;
+    : allMeals;
 
   const handleMealClick = (mealId: number) => {
-    router.push(`/meal/${mealId}`);
+    router.push(`/meal/${mealId}?from=add`);
   };
 
-  const handleNewScan = () => {
-    router.push("/scan");
+  const handleNewScan = (mode: 'meal' | 'barcode') => {
+    router.push(`/scan?mode=${mode}`);
   };
 
   return (
@@ -105,7 +152,7 @@ export default function AddPage() {
         {/* Boutons d'action rapide */}
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={handleNewScan}
+            onClick={() => handleNewScan('meal')}
             className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-gradient-to-br from-[#ED1C24] to-[#F7941D] text-white shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
           >
             <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
@@ -117,7 +164,7 @@ export default function AddPage() {
           </button>
 
           <button
-            onClick={handleNewScan}
+            onClick={() => handleNewScan('barcode')}
             className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-white border-2 border-gray-200 text-gray-700 hover:border-[#17a2b8] hover:text-[#17a2b8] transition-all active:scale-[0.98]"
           >
             <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
@@ -169,63 +216,82 @@ export default function AddPage() {
           )}
 
           {!isLoading && filteredMeals.length > 0 && (
-            <div className="space-y-3">
-              {filteredMeals.map((meal) => (
-                <button
-                  key={meal.id}
-                  onClick={() => handleMealClick(meal.id)}
-                  className="w-full bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center gap-4"
-                >
-                  {/* Image */}
-                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative">
-                    {meal.image_url ? (
-                      <Image
-                        src={meal.image_url}
-                        alt="Repas"
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-2xl">
-                        {MEAL_TYPE_ICONS[meal.meal_type ?? "snack"] ?? "🍽️"}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Infos */}
-                  <div className="flex-1 text-left min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {meal.meal_type && (
-                        <span className="px-2 py-0.5 rounded-full bg-[#17a2b8]/10 text-[#17a2b8] text-xs font-medium">
-                          {MEAL_TYPE_LABELS[meal.meal_type]}
-                        </span>
+            <>
+              <div className="space-y-3">
+                {filteredMeals.map((meal) => (
+                  <button
+                    key={meal.id}
+                    onClick={() => handleMealClick(meal.id)}
+                    className="w-full bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center gap-4"
+                  >
+                    {/* Image */}
+                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative">
+                      {meal.image_url ? (
+                        <Image
+                          src={meal.image_url}
+                          alt="Repas"
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          {(() => {
+                            const IconComponent = MEAL_TYPE_ICONS[meal.meal_type ?? "snack"] ?? ForkKnife;
+                            return <IconComponent size={32} weight="duotone" className="text-[#F7941D]" />;
+                          })()}
+                        </div>
                       )}
                     </div>
-                    <p className="text-sm text-gray-900 font-semibold mb-0.5">
-                      {meal.foods_count}{" "}
-                      {meal.foods_count > 1 ? "aliments" : "aliment"} •{" "}
-                      {Math.round(meal.total_calories)} kcal
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {formatDate(meal.scanned_at)}
-                    </p>
-                  </div>
 
-                  {/* Flèche */}
-                  <div className="flex-shrink-0">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="text-gray-400"
-                    >
-                      <path d="M7.5 15l5-5-5-5" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                    {/* Infos */}
+                    <div className="flex-1 text-left min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        {meal.meal_type && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#17a2b8]/10 text-[#17a2b8] text-xs font-medium">
+                            {MEAL_TYPE_LABELS[meal.meal_type]}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-900 font-semibold mb-0.5">
+                        {meal.foods_count}{" "}
+                        {meal.foods_count > 1 ? "aliments" : "aliment"} •{" "}
+                        {Math.round(meal.total_calories)} kcal
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatDate(meal.scanned_at)}
+                      </p>
+                    </div>
+
+                    {/* Flèche */}
+                    <div className="flex-shrink-0">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="text-gray-400"
+                      >
+                        <path d="M7.5 15l5-5-5-5" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Élément observer pour le scroll infini */}
+              <div ref={observerTarget} className="py-4">
+                {isFetchingNextPage && (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F7941D]"></div>
                   </div>
-                </button>
-              ))}
-            </div>
+                )}
+                {!hasNextPage && filteredMeals.length > 10 && (
+                  <p className="text-center text-sm text-gray-500">
+                    Vous avez vu tous les repas
+                  </p>
+                )}
+              </div>
+            </>
           )}
         </div>
       </main>

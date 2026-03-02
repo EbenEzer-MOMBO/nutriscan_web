@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Plus } from "phosphor-react";
+import { ArrowLeft, Plus, CalendarBlank, PlusCircle } from "phosphor-react";
 
 interface MealResultNavbarProps {
     onBack: () => void;
@@ -8,6 +8,10 @@ interface MealResultNavbarProps {
     mealType: string;
     onMealTypeChange: (type: string) => void;
     isAddingToJournal?: boolean;
+    mode?: "scan" | "edit" | "add_manual";
+    mealDate?: string;
+    onDateChange?: (date: string) => void;
+    onAddManually?: () => void;
 }
 
 const MEAL_TYPES = [
@@ -23,7 +27,36 @@ export default function MealResultNavbar({
     mealType,
     onMealTypeChange,
     isAddingToJournal = false,
+    mode = "scan",
+    mealDate,
+    onDateChange,
+    onAddManually,
 }: MealResultNavbarProps) {
+    // Déterminer le titre et le texte du bouton selon le mode
+    const getTitle = () => {
+        switch (mode) {
+            case "edit":
+                return "Modifier le repas";
+            case "add_manual":
+                return "Ajouter manuellement";
+            case "scan":
+            default:
+                return "Résultat du scan";
+        }
+    };
+
+    const getButtonText = () => {
+        switch (mode) {
+            case "edit":
+                return "Mettre à jour";
+            case "add_manual":
+                return "Ajouter";
+            case "scan":
+            default:
+                return "Ajouter";
+        }
+    };
+
     return (
         <div className="sticky top-0 z-20 bg-gradient-to-b from-white via-white to-transparent backdrop-blur-sm pb-4">
             <div className="bg-white border-b border-gray-100">
@@ -38,7 +71,7 @@ export default function MealResultNavbar({
                         </button>
 
                         <h1 className="text-xl font-bold text-gray-900 flex-1 text-center">
-                            Résultat du scan
+                            {getTitle()}
                         </h1>
 
                         <button
@@ -50,9 +83,31 @@ export default function MealResultNavbar({
                                 }`}
                         >
                             <Plus size={20} weight="bold" />
-                            <span className="text-sm">Ajouter</span>
+                            <span className="text-sm">{getButtonText()}</span>
                         </button>
                     </div>
+
+                    {/* Champ de date */}
+                    {mealDate && onDateChange && (
+                        <div className="mb-4">
+                            <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">
+                                Date du repas
+                            </label>
+                            <div className="relative">
+                                <CalendarBlank 
+                                    size={20} 
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" 
+                                    weight="bold" 
+                                />
+                                <input
+                                    type="date"
+                                    value={mealDate}
+                                    onChange={(e) => onDateChange(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#F7941D] focus:outline-none transition-colors text-gray-900 font-medium"
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     {/* Sélecteur de type de repas */}
                     <div>
@@ -80,6 +135,19 @@ export default function MealResultNavbar({
                             ))}
                         </div>
                     </div>
+
+                    {/* Bouton ajout manuel (seulement en mode scan) */}
+                    {mode === "scan" && onAddManually && (
+                        <div className="mt-4">
+                            <button
+                                onClick={onAddManually}
+                                className="w-full py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-600 hover:border-[#F7941D] hover:text-[#F7941D] transition-all flex items-center justify-center gap-2 font-semibold"
+                            >
+                                <PlusCircle size={20} weight="bold" />
+                                <span>Ajouter un aliment manuellement</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

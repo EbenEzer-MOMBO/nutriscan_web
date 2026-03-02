@@ -28,7 +28,8 @@ export interface DetectedFood {
 
 export interface ScannedMeal {
     id: number;
-    image_url: string;
+    image_url: string | null;
+    image_path?: string | null;
     scanned_at: string;
     meal_type: MealType | null;
     notes: string | null;
@@ -47,7 +48,8 @@ export interface ScanMealResponse {
 
 export interface MealHistoryItem {
     id: number;
-    image_url: string;
+    image_url: string | null;
+    image_path?: string | null;
     scanned_at: string;
     meal_type: MealType | null;
     total_calories: number;

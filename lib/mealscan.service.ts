@@ -109,6 +109,9 @@ export interface AddManualMealData {
     meal_name: string;
     meal_type?: MealType;
     notes?: string;
+    image_path?: string;
+    image_url?: string;
+    scanned_at?: string;
     foods: ManualMealFood[];
 }
 
@@ -241,6 +244,12 @@ export async function updateMeal(
         throw new Error('Non authentifié. Veuillez vous connecter.');
     }
 
+    console.log('🔄 [MEAL API] Mise à jour du repas:', {
+        id,
+        updateData,
+        url: `${API_BASE_URL}/meals/${id}`
+    });
+
     try {
         const response = await fetch(`${API_BASE_URL}/meals/${id}`, {
             method: 'PUT',
@@ -252,12 +261,21 @@ export async function updateMeal(
             body: JSON.stringify(updateData),
         });
 
+        console.log('📥 [MEAL API] Réponse reçue:', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok
+        });
+
         const data = await response.json();
+        console.log('📄 [MEAL API] Données de la réponse:', data);
 
         if (!response.ok) {
+            console.error('❌ [MEAL API] Erreur de mise à jour:', data);
             throw new Error(data.message || 'Erreur lors de la mise à jour du repas');
         }
 
+        console.log('✅ [MEAL API] Repas mis à jour avec succès');
         return data;
     } catch (error) {
         console.error('❌ [MEAL API] Erreur mise à jour:', error);

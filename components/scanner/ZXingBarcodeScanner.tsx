@@ -22,6 +22,17 @@ export default function ZXingBarcodeScanner({
     const [isScanning, setIsScanning] = useState(false);
     const [lastScannedCode, setLastScannedCode] = useState<string>("");
     const [errorMessage, setErrorMessage] = useState<string>("");
+    const [shouldStop, setShouldStop] = useState(false);
+
+    const stopScanner = () => {
+        if (codeReaderRef.current) {
+            console.log("🔵 [ZXING] Arrêt du scanner");
+            codeReaderRef.current.reset();
+            codeReaderRef.current = null;
+            streamRef.current = null;
+            setIsScanning(false);
+        }
+    };
 
     useEffect(() => {
         if (!isActive) {
@@ -29,12 +40,14 @@ export default function ZXingBarcodeScanner({
             return;
         }
 
-        startScanner();
+        if (!shouldStop) {
+            startScanner();
+        }
 
         return () => {
             stopScanner();
         };
-    }, [isActive]);
+    }, [isActive, shouldStop]);
 
     // Contrôler la torche
     useEffect(() => {
@@ -102,6 +115,11 @@ export default function ZXingBarcodeScanner({
                         if (code && code !== lastScannedCode) {
                             console.log("✅ [ZXING] Code détecté:", code);
                             setLastScannedCode(code);
+                            
+                            // Arrêter le scanner immédiatement
+                            setShouldStop(true);
+                            stopScanner();
+                            
                             onBarcodeDetected(code);
                         }
                     }
@@ -130,16 +148,6 @@ export default function ZXingBarcodeScanner({
             if (onError) {
                 onError(errorMsg);
             }
-        }
-    };
-
-    const stopScanner = () => {
-        if (codeReaderRef.current) {
-            console.log("🔵 [ZXING] Arrêt du scanner");
-            codeReaderRef.current.reset();
-            codeReaderRef.current = null;
-            streamRef.current = null;
-            setIsScanning(false);
         }
     };
 

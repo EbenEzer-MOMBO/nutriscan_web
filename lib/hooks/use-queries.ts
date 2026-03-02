@@ -56,9 +56,25 @@ export function useUpdateMeal() {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateMealData }) =>
       updateMeal(id, data),
-    onSuccess: () => {
+    onSuccess: (response, variables) => {
+      console.log("✅ [useUpdateMeal] Mise à jour réussie:", response);
+      console.log("🔄 [useUpdateMeal] Invalidation des caches...");
+      
+      // Invalider le repas spécifique
+      queryClient.invalidateQueries({ queryKey: ["meal", variables.id] });
+      
+      // Invalider le journal et le calendrier mensuel
       queryClient.invalidateQueries({ queryKey: ["journal"] });
       queryClient.invalidateQueries({ queryKey: ["journal-month"] });
+      
+      // Invalider l'historique (normal + infini)
+      queryClient.invalidateQueries({ queryKey: ["meal-history"] });
+      queryClient.invalidateQueries({ queryKey: ["meal-history-infinite"] });
+      
+      console.log("✅ [useUpdateMeal] Caches invalidés");
+    },
+    onError: (error) => {
+      console.error("❌ [useUpdateMeal] Erreur:", error);
     },
   });
 }
@@ -72,6 +88,7 @@ export function useDeleteMeal() {
       queryClient.invalidateQueries({ queryKey: ["journal"] });
       queryClient.invalidateQueries({ queryKey: ["journal-month"] });
       queryClient.invalidateQueries({ queryKey: ["meal-history"] });
+      queryClient.invalidateQueries({ queryKey: ["meal-history-infinite"] });
     },
   });
 }
@@ -80,5 +97,33 @@ export function useMealHistory(page = 1, perPage = 20) {
   return useQuery({
     queryKey: ["meal-history", page, perPage],
     queryFn: () => getMealHistory(page, perPage),
+  });
+}
+
+export function useAddManualMeal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const { addManualMeal } = await import("@/lib/mealscan.service");
+      return addManualMeal(data);
+    },
+    onSuccess: (response) => {
+      console.log("✅ [useAddManualMeal] Repas ajouté:", response);
+      console.log("🔄 [useAddManualMeal] Invalidation des caches...");
+      
+      // Invalider le journal et le calendrier mensuel
+      queryClient.invalidateQueries({ queryKey: ["journal"] });
+      queryClient.invalidateQueries({ queryKey: ["journal-month"] });
+      
+      // Invalider l'historique (normal + infini)
+      queryClient.invalidateQueries({ queryKey: ["meal-history"] });
+      queryClient.invalidateQueries({ queryKey: ["meal-history-infinite"] });
+      
+      console.log("✅ [useAddManualMeal] Caches invalidés");
+    },
+    onError: (error) => {
+      console.error("❌ [useAddManualMeal] Erreur:", error);
+    },
   });
 }

@@ -32,6 +32,9 @@ function ScanPageContent() {
 
   const handleMealCapture = async () => {
     console.log("📸 [SCAN PAGE] Capture d'image du repas...");
+    
+    // Désactiver la lampe avant l'analyse
+    setIsTorchOn(false);
     setIsAnalyzingMeal(true);
 
     try {
@@ -117,6 +120,8 @@ function ScanPageContent() {
         sizeKB: (file.size / 1024).toFixed(2) + ' KB'
       });
 
+      // Désactiver la lampe
+      setIsTorchOn(false);
       setIsAnalyzingMeal(true);
 
       try {
@@ -144,6 +149,9 @@ function ScanPageContent() {
 
   const handleBarcodeDetected = async (barcode: string) => {
     console.log("✅ [SCAN PAGE] Code-barres détecté:", barcode);
+    
+    // Désactiver la lampe
+    setIsTorchOn(false);
     setDetectedBarcode(barcode);
     setIsScanningBarcode(true);
 
@@ -167,7 +175,7 @@ function ScanPageContent() {
     } catch (error) {
       console.error("❌ [SCAN PAGE] Erreur lors du scan:", error);
       alert(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-      setIsAnalyzingMeal(false);
+      setIsScanningBarcode(false);
     }
   };
 

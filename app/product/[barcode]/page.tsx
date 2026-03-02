@@ -97,12 +97,16 @@ export default function ProductPage() {
             <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
                 {/* Image et Infos Principales */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    {product.image_url && (
+                    {product.image_url ? (
                         <img
                             src={product.image_url}
                             alt={product.product_name}
                             className="w-full h-64 object-contain mb-4 rounded-xl"
                         />
+                    ) : (
+                        <div className="w-full h-64 flex items-center justify-center mb-4 rounded-xl bg-gray-100">
+                            <Package size={80} weight="duotone" className="text-gray-400" />
+                        </div>
                     )}
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">{product.product_name}</h2>
                     {product.brands && <p className="text-lg text-gray-600 mb-2">{product.brands}</p>}

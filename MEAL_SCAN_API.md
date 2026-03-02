@@ -143,6 +143,9 @@ Content-Type: application/json
   "meal_name": "Déjeuner équilibré",
   "meal_type": "lunch",
   "notes": "Repas préparé à la maison",
+  "scanned_at": "2026-02-20 13:30:00",
+  "image_path": "meals/user-7/custom-meal.jpg",
+  "image_url": "https://example.com/meals/custom-meal.jpg",
   "foods": [
     {
       "name": "Poulet grillé",
@@ -192,6 +195,9 @@ Content-Type: application/json
 **Champs optionnels** :
 - `meal_type` : Type de repas (`breakfast`, `lunch`, `dinner`, `snack`)
 - `notes` : Notes (string, max 1000 caractères)
+- `image_path` : Chemin de l'image (string, max 500 caractères)
+- `image_url` : URL de l'image (string, URL valide, max 500 caractères)
+- `scanned_at` : Date et heure du repas (date, format ISO 8601 ou Y-m-d H:i:s). Par défaut : date/heure actuelle
 - `nutrition.sugars` : Sucres en g (number, min 0)
 - `nutrition.saturated_fat` : Graisses saturées en g (number, min 0)
 - `nutrition.fiber` : Fibres en g (number, min 0)
@@ -205,6 +211,7 @@ curl -X POST http://localhost:8000/api/meals/add-manual \
   -d '{
     "meal_name": "Déjeuner équilibré",
     "meal_type": "lunch",
+    "scanned_at": "2026-02-20 13:30:00",
     "foods": [
       {
         "name": "Poulet grillé",
@@ -228,8 +235,8 @@ curl -X POST http://localhost:8000/api/meals/add-manual \
   "message": "Repas ajouté avec succès.",
   "data": {
     "id": 5,
-    "image_url": null,
-    "scanned_at": "2026-02-23T15:30:00+01:00",
+    "image_url": "https://example.com/meals/custom-meal.jpg",
+    "scanned_at": "2026-02-20T13:30:00+01:00",
     "meal_type": "lunch",
     "notes": "Repas préparé à la maison",
     "foods_detected": [

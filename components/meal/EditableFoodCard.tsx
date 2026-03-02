@@ -29,6 +29,19 @@ const CONFIDENCE_CONFIG = {
         text: "text-red-700",
         label: "Faible confiance",
     },
+    manual: {
+        bg: "bg-blue-50",
+        border: "border-blue-200",
+        text: "text-blue-700",
+        label: "Manuel",
+    },
+};
+
+const DEFAULT_CONFIG = {
+    bg: "bg-gray-50",
+    border: "border-gray-200",
+    text: "text-gray-700",
+    label: "Non spécifié",
 };
 
 export default function EditableFoodCard({
@@ -38,7 +51,7 @@ export default function EditableFoodCard({
 }: EditableFoodCardProps) {
     const [quantity, setQuantity] = useState(food.quantity_value);
     const [isEditing, setIsEditing] = useState(false);
-    const confidenceConfig = CONFIDENCE_CONFIG[food.confidence];
+    const confidenceConfig = CONFIDENCE_CONFIG[food.confidence as keyof typeof CONFIDENCE_CONFIG] || DEFAULT_CONFIG;
 
     // Calculer les valeurs proportionnelles
     const ratio = quantity / food.quantity_value;

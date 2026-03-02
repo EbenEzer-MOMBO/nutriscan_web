@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { ForkKnife, Fire, Cookie, Drop } from "phosphor-react";
 import { ScannedMeal, DetectedFood, MealType } from "@/lib/types/mealscan";
-import { useMealDetails, useUpdateMeal } from "@/lib/hooks/use-queries";
+import { useMealDetails, useUpdateMeal, useAddManualMeal } from "@/lib/hooks/use-queries";
 import MealResultNavbar from "@/components/meal/MealResultNavbar";
 import NutrientBar from "@/components/meal/NutrientBar";
 import EditableFoodCard from "@/components/meal/EditableFoodCard";
@@ -12,23 +12,67 @@ import EditableFoodCard from "@/components/meal/EditableFoodCard";
 export default function MealPage() {
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
     const idParam = params.id as string;
     const mealId = parseInt(idParam, 10);
     const idValid = !isNaN(mealId) && mealId > 0;
 
+    // Vérifier si on vient de la page /add
+    const fromAdd = searchParams.get('from') === 'add';
+
+    // Déterminer le mode: "scan", "edit" ou "add_manual"
+    const [mode, setMode] = useState<"scan" | "edit" | "add_manual">("scan");
+
     const { data: mealResult, isLoading: loading, isError: hasError, error } = useMealDetails(idValid ? mealId : null);
     const updateMealMutation = useUpdateMeal();
+    const addManualMealMutation = useAddManualMeal();
 
     const meal = mealResult?.success ? mealResult.data : null;
     const [foods, setFoods] = useState<DetectedFood[]>([]);
     const [mealType, setMealType] = useState<string>("");
+    const [mealDate, setMealDate] = useState<string>("");
 
     useEffect(() => {
         if (meal) {
             setFoods(meal.foods_detected ?? []);
-            if (meal.meal_type) setMealType(meal.meal_type);
+            
+            // Déterminer le mode en fonction de la provenance et du meal_type
+            if (fromAdd) {
+                // Si on vient de /add, toujours en mode scan (ajout avec date modifiable)
+                setMode("scan");
+                // Date initiale: aujourd'hui (l'utilisateur peut la modifier)
+                const today = new Date().toISOString().split('T')[0];
+                setMealDate(today);
+                // Ne pas définir le meal_type automatiquement
+                if (!mealType) {
+                    setMealType("");
+                }
+            } else if (meal.meal_type) {
+                // Si meal_type est déjà défini (et on ne vient pas de /add), on est en mode édition
+                setMealType(meal.meal_type);
+                setMode("edit");
+                // Utiliser la date du scan
+                if (meal.scanned_at) {
+                    const date = new Date(meal.scanned_at);
+                    const dateStr = date.toISOString().split('T')[0];
+                    setMealDate(dateStr);
+                }
+            } else {
+                // Si meal_type n'est pas défini, c'est un scan récent
+                setMode("scan");
+                // Extraire la date du scan
+                if (meal.scanned_at) {
+                    const date = new Date(meal.scanned_at);
+                    const dateStr = date.toISOString().split('T')[0];
+                    setMealDate(dateStr);
+                } else {
+                    // Date par défaut: aujourd'hui
+                    const today = new Date().toISOString().split('T')[0];
+                    setMealDate(today);
+                }
+            }
         }
-    }, [meal]);
+    }, [meal, fromAdd]);
 
     // Recalculer le résumé nutritionnel basé sur les aliments actuels
     const calculateNutritionSummary = () => {
@@ -82,24 +126,78 @@ export default function MealPage() {
             return;
         }
 
+        if (!mealDate) {
+            alert("Veuillez sélectionner une date");
+            return;
+        }
+
         try {
-            await updateMealMutation.mutateAsync({
-                id: meal.id,
-                data: {
+            if (fromAdd) {
+                // Mode ajout depuis /add : créer un nouveau repas avec add-manual
+                console.log("📝 [MEAL PAGE] Ajout d'un nouveau repas depuis /add");
+                
+                // Générer un nom pour le repas basé sur les aliments
+                const mealName = foods.length > 0 
+                    ? foods.map(f => f.name).slice(0, 3).join(", ") + (foods.length > 3 ? "..." : "")
+                    : "Repas";
+                
+                await addManualMealMutation.mutateAsync({
+                    meal_name: mealName,
                     meal_type: mealType as MealType,
-                    foods_detected: foods,
-                    ...(meal.notes != null && meal.notes !== "" && { notes: meal.notes }),
-                },
-            });
-            alert("Repas ajouté au journal avec succès !");
+                    notes: meal.notes || undefined,
+                    // Copier l'image du repas source
+                    ...(meal.image_path && { image_path: meal.image_path }),
+                    ...(meal.image_url && { image_url: meal.image_url }),
+                    // Utiliser la date sélectionnée par l'utilisateur
+                    scanned_at: mealDate,
+                    foods: foods.map(f => ({
+                        name: f.name,
+                        quantity: f.quantity_value,
+                        unit: f.quantity_unit,
+                        nutrition: {
+                            energy_kcal: f.nutrition.energy_kcal,
+                            proteins: f.nutrition.proteins,
+                            carbohydrates: f.nutrition.carbohydrates,
+                            sugars: f.nutrition.sugars,
+                            fat: f.nutrition.fat,
+                            saturated_fat: f.nutrition.saturated_fat,
+                            fiber: f.nutrition.fiber,
+                            sodium: f.nutrition.sodium,
+                        }
+                    }))
+                });
+                
+                alert("Repas ajouté au journal avec succès !");
+            } else {
+                // Mode édition ou scan : mettre à jour le repas existant
+                console.log("🔄 [MEAL PAGE] Mise à jour du repas existant");
+                
+                await updateMealMutation.mutateAsync({
+                    id: meal.id,
+                    data: {
+                        meal_type: mealType as MealType,
+                        foods_detected: foods,
+                        ...(meal.notes != null && meal.notes !== "" && { notes: meal.notes }),
+                    },
+                });
+                
+                const actionText = mode === "edit" ? "mis à jour" : "ajouté au journal";
+                alert(`Repas ${actionText} avec succès !`);
+            }
+            
             router.push("/journal");
         } catch (err) {
-            console.error("Erreur lors de l'ajout au journal:", err);
-            alert(err instanceof Error ? err.message : "Erreur lors de l'ajout au journal");
+            console.error("❌ [MEAL PAGE] Erreur:", err);
+            alert(err instanceof Error ? err.message : "Erreur lors de l'opération");
         }
     };
 
-    const isAddingToJournal = updateMealMutation.isPending;
+    const handleAddManually = () => {
+        // TODO: Navigate to manual add page or open modal
+        router.push("/add-manual");
+    };
+
+    const isAddingToJournal = updateMealMutation.isPending || addManualMealMutation.isPending;
 
     if (loading) {
         return (
@@ -141,12 +239,16 @@ export default function MealPage() {
                 mealType={mealType}
                 onMealTypeChange={setMealType}
                 isAddingToJournal={isAddingToJournal}
+                mode={mode}
+                mealDate={mealDate}
+                onDateChange={setMealDate}
+                onAddManually={handleAddManually}
             />
 
             {/* Content */}
             <div className="max-w-2xl mx-auto px-4 space-y-6">
-                {/* Image du repas */}
-                {meal.image_url && (
+                {/* Image du repas ou icône de remplacement */}
+                {meal.image_url ? (
                     <div className="relative rounded-2xl overflow-hidden shadow-lg">
                         <img
                             src={meal.image_url}
@@ -155,6 +257,18 @@ export default function MealPage() {
                         />
                         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full">
                             <span className="text-sm font-semibold text-gray-900">
+                                {foods.length} aliment{foods.length > 1 ? "s" : ""}
+                            </span>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="relative rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-orange-50 to-red-50 border border-orange-100">
+                        <div className="w-full h-72 flex flex-col items-center justify-center">
+                            <ForkKnife size={80} weight="duotone" className="text-[#F7941D] mb-4" />
+                            <span className="text-sm font-semibold text-gray-600">
+                                Repas ajouté manuellement
+                            </span>
+                            <span className="text-xs text-gray-500 mt-1">
                                 {foods.length} aliment{foods.length > 1 ? "s" : ""}
                             </span>
                         </div>

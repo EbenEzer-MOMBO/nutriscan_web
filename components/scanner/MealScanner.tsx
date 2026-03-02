@@ -13,7 +13,7 @@ export default function MealScanner({ isActive, isAnalyzing, isTorchOn = false }
     const [stream, setStream] = useState<MediaStream | null>(null);
 
     useEffect(() => {
-        if (isActive) {
+        if (isActive && !isAnalyzing) {
             startCamera();
         } else {
             stopCamera();
@@ -22,7 +22,7 @@ export default function MealScanner({ isActive, isAnalyzing, isTorchOn = false }
         return () => {
             stopCamera();
         };
-    }, [isActive]);
+    }, [isActive, isAnalyzing]);
 
     // Contrôler la torche
     useEffect(() => {
