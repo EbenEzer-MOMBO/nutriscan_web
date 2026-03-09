@@ -36,6 +36,36 @@ export default function MealPage() {
         if (meal) {
             setFoods(meal.foods_detected ?? []);
             
+            // Vérifier s'il y a un aliment sélectionné dans sessionStorage
+            if (typeof window !== 'undefined') {
+                const selectedFoodItem = sessionStorage.getItem('selectedFoodItem');
+                if (selectedFoodItem) {
+                    try {
+                        const foodItem = JSON.parse(selectedFoodItem);
+                        console.log("🍴 [MEAL PAGE] Aliment récupéré:", foodItem);
+                        
+                        // Convertir en DetectedFood
+                        const newFood: DetectedFood = {
+                            name: foodItem.name,
+                            type: foodItem.type,
+                            quantity_display: `${foodItem.reference_quantity} ${foodItem.reference_unit}`,
+                            quantity_value: foodItem.reference_quantity,
+                            quantity_unit: foodItem.reference_unit,
+                            estimated_weight_grams: foodItem.type === 'pesable' ? foodItem.reference_quantity : 0,
+                            confidence: 'manual' as any,
+                            nutrition: foodItem.nutrition_per_reference,
+                        };
+                        
+                        setFoods(prev => [...prev, newFood]);
+                        
+                        // Nettoyer le sessionStorage
+                        sessionStorage.removeItem('selectedFoodItem');
+                    } catch (error) {
+                        console.error("❌ Erreur parsing foodItem:", error);
+                    }
+                }
+            }
+            
             // Déterminer le mode en fonction de la provenance et du meal_type
             if (fromAdd) {
                 // Si on vient de /add, toujours en mode scan (ajout avec date modifiable)
@@ -193,8 +223,7 @@ export default function MealPage() {
     };
 
     const handleAddManually = () => {
-        // TODO: Navigate to manual add page or open modal
-        router.push("/add-manual");
+        router.push(`/add-manual?returnTo=/meal/${mealId}`);
     };
 
     const isAddingToJournal = updateMealMutation.isPending || addManualMealMutation.isPending;

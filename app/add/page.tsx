@@ -28,13 +28,49 @@ function formatDate(isoDate: string): string {
     const d = new Date(isoDate);
     const now = new Date();
     const diffMs = now.getTime() - d.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return "Aujourd'hui";
-    if (diffDays === 1) return "Hier";
-    if (diffDays < 7) return `Il y a ${diffDays} jours`;
+    // Moins d'une minute
+    if (diffMinutes < 1) return "À l'instant";
     
-    return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+    // Moins d'une heure
+    if (diffMinutes < 60) {
+      return `Il y a ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}`;
+    }
+    
+    // Moins de 24h (aujourd'hui)
+    if (diffHours < 24 && d.getDate() === now.getDate()) {
+      if (diffHours === 1) return "Il y a 1 heure";
+      return `Il y a ${diffHours} heures`;
+    }
+    
+    // Hier
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (d.getDate() === yesterday.getDate() && 
+        d.getMonth() === yesterday.getMonth() && 
+        d.getFullYear() === yesterday.getFullYear()) {
+      const hours = d.getHours().toString().padStart(2, '0');
+      const minutes = d.getMinutes().toString().padStart(2, '0');
+      return `Hier à ${hours}:${minutes}`;
+    }
+    
+    // Cette semaine (moins de 7 jours)
+    if (diffDays < 7) {
+      const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+      const hours = d.getHours().toString().padStart(2, '0');
+      const minutes = d.getMinutes().toString().padStart(2, '0');
+      return `${days[d.getDay()]} à ${hours}:${minutes}`;
+    }
+    
+    // Plus ancien : afficher la date
+    return d.toLocaleDateString("fr-FR", { 
+      day: "numeric", 
+      month: "short",
+      year: d.getFullYear() !== now.getFullYear() ? "numeric" : undefined
+    });
   } catch {
     return "";
   }
@@ -118,6 +154,10 @@ export default function AddPage() {
     router.push(`/scan?mode=${mode}`);
   };
 
+  const handleCreateCustomMeal = () => {
+    router.push("/create-meal");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <Header />
@@ -150,30 +190,46 @@ export default function AddPage() {
         </div>
 
         {/* Boutons d'action rapide */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-3">
+          {/* Bouton Personnaliser (principal) */}
           <button
-            onClick={() => handleNewScan('meal')}
-            className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-gradient-to-br from-[#ED1C24] to-[#F7941D] text-white shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
+            onClick={handleCreateCustomMeal}
+            className="w-full flex items-center justify-center gap-3 p-6 rounded-2xl bg-gradient-to-br from-[#ED1C24] to-[#F7941D] text-white shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
           >
             <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-              <Camera size={28} weight="bold" />
+              <ForkKnife size={28} weight="bold" />
             </div>
             <span className="font-semibold text-sm text-center">
-              Scanner repas
+              Personnaliser mon repas
             </span>
           </button>
 
-          <button
-            onClick={() => handleNewScan('barcode')}
-            className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-white border-2 border-gray-200 text-gray-700 hover:border-[#17a2b8] hover:text-[#17a2b8] transition-all active:scale-[0.98]"
-          >
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-              <Barcode size={28} weight="bold" />
-            </div>
-            <span className="font-semibold text-sm text-center">
-              Scanner produit
-            </span>
-          </button>
+          {/* Boutons de scan */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => handleNewScan('meal')}
+              className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-white border-2 border-gray-200 text-gray-700 hover:border-[#17a2b8] hover:text-[#17a2b8] transition-all active:scale-[0.98]"
+            >
+              <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                <Camera size={28} weight="bold" />
+              </div>
+              <span className="font-semibold text-sm text-center">
+                Scanner repas
+              </span>
+            </button>
+
+            <button
+              onClick={() => handleNewScan('barcode')}
+              className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-white border-2 border-gray-200 text-gray-700 hover:border-[#17a2b8] hover:text-[#17a2b8] transition-all active:scale-[0.98]"
+            >
+              <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                <Barcode size={28} weight="bold" />
+              </div>
+              <span className="font-semibold text-sm text-center">
+                Scanner produit
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Historique récent */}
