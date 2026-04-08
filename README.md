@@ -5,11 +5,13 @@ Application web progressive (PWA) pour suivre vos calories avec l'intelligence a
 ## 🎨 Thème & Design
 
 **Palette de couleurs:**
+
 - **Rouge Intense:** `#ED1C24` (Action/Force)
 - **Orange Énergie:** `#F7941D` (Vitalité/Élan)
 - **Violet Dynamique:** `#662D91` (Profondeur/Expertise)
 
 **Style:**
+
 - Boutons et éléments principaux : dégradé rouge/orange
 - Ombres et effets : nuances de violet
 - Effets néon sur les barres de progression
@@ -30,8 +32,7 @@ Application web progressive (PWA) pour suivre vos calories avec l'intelligence a
 # Installer les dépendances
 npm install
 
-# Copier le fichier d'environnement
-cp .env.local.example .env.local
+# Créer .env.local à partir des variables décrites dans ENV_EXAMPLE.md
 
 # Configurer les variables d'environnement (voir ENV_EXAMPLE.md)
 # Éditer .env.local avec vos clés
@@ -45,12 +46,14 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 ## 📱 Fonctionnalités
 
 ### ✅ Authentification
+
 - 🔐 Connexion Google OAuth
 - 🍎 Connexion Apple Sign In
 - 🔒 Protection des routes
 - 💾 Gestion des sessions
 
 ### 📊 Tableau de Bord
+
 - 📈 Suivi des calories quotidiennes
 - 🎯 Objectifs caloriques personnalisés
 - 📊 Répartition des macronutriments (Protéines, Glucides, Lipides)
@@ -58,29 +61,34 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 - ✨ Effets néon sur les progressions
 
 ### 📸 Scanner
+
 - 📷 Scanner de repas avec caméra
 - 🔍 Scanner de code-barres
 - 🍽️ Scanner de recettes
 - 🖼️ Sélection depuis la galerie
 
 ### 📖 Journal
+
 - 📅 Calendrier mensuel interactif
 - 🍳 Sections repas (Petit-déjeuner, Déjeuner, Dîner, Collations)
 - 📊 Détails nutritionnels
 - ✅ Indicateurs d'objectifs atteints
 
 ### 👤 Profil
+
 - 🖼️ Photo de profil (AWS S3/CloudFlare R2)
 - 📧 Informations utilisateur
 - 👑 Badge Premium
 - ⚙️ Paramètres de compte
 
 ### 📈 Tendances
+
 - 📊 Statistiques (Bientôt disponible)
 - 📉 Graphiques de progression
 - 🎯 Analyse des objectifs
 
 ### 🎯 Onboarding Profil
+
 - 👤 Configuration du profil
 - ⚖️ Mesures corporelles
 - 🏋️ Type de morphologie
@@ -88,7 +96,7 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 ## 🛠️ Technologies
 
-- **Framework:** Next.js 15 (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **UI:** React 19, Tailwind CSS
 - **Icônes:** Phosphor Icons
 - **Authentification:** Google OAuth, Apple Sign In
@@ -98,6 +106,7 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 ## 📚 Documentation
 
+- [TECHNICAL.md](./TECHNICAL.md) - **Documentation technique complète** (architecture, auth, API, déploiement)
 - [ENV_EXAMPLE.md](./ENV_EXAMPLE.md) - Configuration des variables d'environnement
 - [API_SOCIAL_AUTH.md](./API_SOCIAL_AUTH.md) - Documentation complète de l'API backend
 - [AUTHENTICATION_SETUP.md](./AUTHENTICATION_SETUP.md) - Guide d'installation de l'authentification
@@ -163,26 +172,28 @@ L'application est installable sur mobile et desktop :
 ## 🎯 Flux de Navigation
 
 1. **Non authentifié:**
-   - `/` → Onboarding (3 slides)
-   - `/login` → Connexion Google/Apple
-   - Redirection automatique vers `/dashboard` après connexion
-
+  - `/` → Onboarding (3 slides)
+  - `/login` → Connexion Google/Apple
+  - Redirection automatique vers `/dashboard` après connexion
 2. **Authentifié:**
-   - `/` → Redirection automatique vers `/dashboard`
-   - Navigation via Bottom Nav (Dashboard, Journal, Scan, Trends, Profile)
-   - Protection des routes via middleware
+  - `/` → Redirection automatique vers `/dashboard`
+  - Navigation via Bottom Nav (Dashboard, Journal, Scan, Trends, Profile)
+  - Protection des routes via middleware
 
 ## 🐛 Dépannage
 
 ### Erreur: hostname not configured
+
 Vérifier la configuration de `next.config.ts` → `images.remotePatterns`
 
 ### PWA ne s'installe pas
+
 - Vérifier que l'app est servie en HTTPS
 - Vérifier que `manifest.json` et `sw.js` sont accessibles
 - Sur iOS, utiliser "Ajouter à l'écran d'accueil"
 
 ### Camera ne fonctionne pas
+
 - Vérifier les permissions navigateur
 - L'app doit être en HTTPS (sauf localhost)
 

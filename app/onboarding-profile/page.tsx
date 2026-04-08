@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { queryKeys } from "@/lib/hooks/use-queries";
 import { ArrowLeft, ArrowRight, Check } from "phosphor-react";
 import { UserProfile } from "@/lib/types/profile";
 import ProfileSuccessScreen from "@/components/profile/ProfileSuccessScreen";
@@ -18,6 +20,7 @@ interface ProfileData {
 
 export default function OnboardingProfilePage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5;
 
@@ -103,7 +106,11 @@ export default function OnboardingProfilePage() {
 
         if (result.success && result.data) {
           console.log("Profil créé avec succès:", result.data);
-          // Afficher l'écran de succès
+          // Mettre à jour le cache React Query (évite de réutiliser un ancien getProfile "sans profil")
+          queryClient.setQueryData(queryKeys.profile, {
+            success: true,
+            data: result.data,
+          });
           setCreatedProfile(result.data);
         } else {
           console.error("Erreur création profil:", result.message);

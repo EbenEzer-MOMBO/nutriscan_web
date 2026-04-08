@@ -1,6 +1,8 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { queryKeys } from "@/lib/hooks/use-queries";
 import { UserProfile } from "@/lib/types/profile";
 import { Fire, Barbell, Cookie, Drop, Check, Sparkle } from "phosphor-react";
 import { useState } from "react";
@@ -18,11 +20,13 @@ const GOAL_CONFIG = {
 
 export default function ProfileSuccessScreen({ profile }: ProfileSuccessScreenProps) {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [isNavigating, setIsNavigating] = useState(false);
     const goalConfig = GOAL_CONFIG[profile.goal];
 
-    const handleContinue = () => {
+    const handleContinue = async () => {
         setIsNavigating(true);
+        await queryClient.invalidateQueries({ queryKey: queryKeys.profile });
         router.push("/dashboard");
     };
 
